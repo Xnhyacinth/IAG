@@ -1,0 +1,14 @@
+apex
+deepspeed
+bitsandbytes
+datasets
+numpy
+peft
+pytorch_lightning==1.6.3
+regex
+torch
+torchtyping
+tqdm
+transformers==4.23.1
+scipy
+
