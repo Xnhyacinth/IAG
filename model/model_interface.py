@@ -164,8 +164,8 @@ class MInterface(pl.LightningModule):
                 self.tokenizer, self.args, train_data, dev_data, test_data)
             # dataset = load_dataset("json", data_files={'train':self.args.train_data, 'eval':self.args.eval_data, 'test':self.args.test_data})
             # dataset = dataset.map(self.get_features, batched=True, desc="Features for Input")
-            self.data_model = ImageDataModel(
-                dataset['train'], dataset['eval'], dataset['test'], self.tokenizer, self.args)
+            # self.data_model = ImageDataModel(
+            #     dataset['train'], dataset['eval'], dataset['test'], self.tokenizer, self.args)
             self.model.num_data = len(train_data)
         
         self.trainer.fit(self.model, self.data_model)
