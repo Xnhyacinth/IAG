@@ -154,7 +154,7 @@ class MInterface(pl.LightningModule):
         return sample
     
     def train(self):
-        if self.args.hg_datapath:
+        if self.args.hg_datapath is not None:
             dataset = load_dataset('hg_datapath', f"ctxs{self.args.n_c}")
         else:
             train_data = self.load_data(self.args.train_data)
@@ -162,8 +162,8 @@ class MInterface(pl.LightningModule):
             test_data = self.load_data(self.args.test_data)
             self.data_model = ImageDataModel(
                 self.tokenizer, self.args, train_data, dev_data, test_data)
-            dataset = load_dataset("json", data_files={'train':self.args.train_data, 'eval':self.args.eval_data, 'test':self.args.test_data})
-            dataset = dataset.map(self.get_features, batched=True, desc="Features for Input")
+            # dataset = load_dataset("json", data_files={'train':self.args.train_data, 'eval':self.args.eval_data, 'test':self.args.test_data})
+            # dataset = dataset.map(self.get_features, batched=True, desc="Features for Input")
             self.data_model = ImageDataModel(
                 dataset['train'], dataset['eval'], dataset['test'], self.tokenizer, self.args)
             self.model.num_data = len(train_data)
