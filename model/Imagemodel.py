@@ -23,6 +23,7 @@ class ImageModel(nn.Module):
         model = transformers.AutoModelForSeq2SeqLM.from_pretrained(
             pre_train_dir
         )
+        self.encoder = model.encoder
         self.model = FiDT5(model.config)
         self.model.load_t5(model.state_dict())
         if args.lora:
@@ -41,7 +42,7 @@ class ImageModel(nn.Module):
         elif args.hylora:
             self.model = T5LoraWrapper(self.model, args.lora_rank, args.hidden_adapter_dim, args.load_hypernet_weights)
             # self.model.model.set_checkpoint(args.use_checkpoint)
-
+        
     def forward(self, input_ids, attention_mask, labels, features=None, **kwargs):
         output = self.model(input_ids=input_ids,
                             attention_mask=attention_mask,
@@ -107,6 +108,7 @@ class ImageLitModel(pl.LightningModule):
         self.args = args
         self.num_data = 100
         self.model = ImageModel(args, model_path)
+        self.encoder = self.model.encoder
         self.tokenizer = tokenizer
 
     def load_teacher(self, args):

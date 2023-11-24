@@ -119,7 +119,7 @@ class MInterface(pl.LightningModule):
 
         return examples
     
-    def compute_kernel_bias(vecs, n_components=256):
+    def compute_kernel_bias(self, vecs, n_components=256):
         """compute kernel and bias
         vecs.shape = [num_samples, embedding_size]
         transfer:y = (x + bias).dot(kernel)
@@ -131,7 +131,7 @@ class MInterface(pl.LightningModule):
         return W[:, :n_components], -mu
 
 
-    def transform_and_normalize(vecs, kernel=None, bias=None):
+    def transform_and_normalize(self, vecs, kernel=None, bias=None):
         """ normalization
         """
         if not (kernel is None or bias is None):
@@ -143,11 +143,11 @@ class MInterface(pl.LightningModule):
         question = ['Question: Please write a high-quality answer for the given question using only the provided search results (some of which might be irrelevant). Only give me the answer and do not output any other words.'\
                     'Question: ' + item + '\nAnswer:' for item in sample['question']]
         inputs = self.tokenizer(question, return_tensors='pt', padding=True)
-        encoder = self.model.model.model.encoder if hasattr(self.model.model, 'model') else self.model.model.encoder
+        encoder = self.model.encoder
         output = encoder(input_ids=inputs['input_ids'], attention_mask=inputs['attention_mask'], return_dict=True)
-        pooled_sentence = output.last_hidden_state.cpu() # shape is [batch_size, seq_len, hidden_size]
-        pooled_sentence = np.array(pooled_sentence)    
-        kernel,bias = self.compute_kernel_bias(pooled_sentence,255)
+        pooled_sentence = output.last_hidden_state # shape is [batch_size, seq_len, hidden_size]
+        pooled_sentence = np.array(torch.mean(pooled_sentence, dim=1).cpu().detach().numpy())  
+        kernel, bias = self.compute_kernel_bias(pooled_sentence, 255)
         pooled_sentence = self.transform_and_normalize(pooled_sentence, kernel=kernel, bias=bias)
         sample['features'] = pooled_sentence
         print(pooled_sentence.shape())
@@ -155,7 +155,9 @@ class MInterface(pl.LightningModule):
     
     def train(self):
         if self.args.hg_datapath is not None:
-            dataset = load_dataset('hg_datapath', f"ctxs{self.args.n_c}")
+            dataset = load_dataset(self.args.hg_datapath, f"ctxs{self.args.n_c}")
+            dataset = dataset.map(self.get_features, batched=True, desc="Features for Input")
+            print(dataset)
         else:
             train_data = self.load_data(self.args.train_data)
             dev_data = self.load_data(self.args.eval_data)
@@ -178,7 +180,7 @@ class MInterface(pl.LightningModule):
     
     def save(self, save_name):
         if self.args.hylora:
-            torch.save(self.trainer.model.model.model.hypernet.state_dict(), save_name + 'hypernet.pth')
+            torch.save(self.trainer.model.model.model.hypernet.state_dict(), save_name + '/hypernet.pth')
         elif self.args.lora:
             self.trainer.model.model.model.save_pretrained(save_name)
             self.tokenizer.save_pretrained(save_name)

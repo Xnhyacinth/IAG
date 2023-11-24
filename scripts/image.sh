@@ -22,6 +22,7 @@ distill=${8:-"kl"}
 train_teacher=${9:-"no"}
 gold=${10:-"False"}
 lr=${11:-"1e-4"}
+n_c=${12:-"0"}
 echo "batch_size: ${batch_size}"
 echo "max_steps: ${max_steps}"
 echo "lr: ${lr}"
@@ -53,6 +54,11 @@ if [ "$gold" = "gold" ];then
   name="${name}_gold"
 fi
 name="${name}_lr${lr}"
+if [ "$n_c" != "0" ];then
+  hg_datapath="Xnhyacinth/NQ-Image"
+  extra_args="$extra_args --hg_datapath ${hg_datapath} --n_c ${n_c}"
+  name="${name}_hg_ctxs${n_c}"
+fi
 extra_args="$extra_args --name $name"
 echo "name: ${name}"
 
