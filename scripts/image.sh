@@ -27,7 +27,7 @@ echo "batch_size: ${batch_size}"
 echo "max_steps: ${max_steps}"
 echo "lr: ${lr}"
 export MASTER_ADDR=localhost
-export MASTER_PORT="52990"
+export MASTER_PORT="52995"
 
 context_maxlength=512
 if [ "$name" = "lora" ];then
@@ -48,6 +48,10 @@ fi
 if [ "$train_teacher" = "train" ];then
   extra_args="$extra_args --train_teacher"
   name="${name}_train"
+fi
+if [ "$train_teacher" = "full" ];then
+  extra_args="$extra_args --train_teacher"
+  name="${name}_train_full"
 fi
 if [ "$gold" = "gold" ];then
   extra_args="$extra_args --gold"

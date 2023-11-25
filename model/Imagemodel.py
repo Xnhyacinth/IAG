@@ -124,7 +124,7 @@ class ImageLitModel(pl.LightningModule):
                 task_type=TaskType.SEQ_2_SEQ_LM
             )
             # add LoRA adaptor
-            self.t_model = get_peft_model(self.t_model, lora_config)
+            # self.t_model = get_peft_model(self.t_model, lora_config)
             self.t_optimizer = torch.optim.AdamW(filter(lambda p: p.requires_grad, self.t_model.parameters()), lr=args.t_learning_rate)
             self.t_scheduler = transformers.get_linear_schedule_with_warmup(optimizer=self.t_optimizer,
                     num_warmup_steps=(args.warmup_ratio * self.total_step),

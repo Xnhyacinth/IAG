@@ -11,5 +11,5 @@
 # hylora_all_gold
 # nohup bash scripts/image.sh 2 5,6 4 1000 2 50000 hylora all no gold 1e-3 > logs/hylora_all_notrain_gold_lr1e-3.log 2>&1 &
 
-# hylora_kl_gold
-nohup bash scripts/image.sh 2 5,6 4 1000 2 50000 hylora kl no gold 5e-3 > logs/hylora_kl_notrain_gold_lr5e-3.log 2>&1 &
+# hylora_all_gold_train
+nohup bash scripts/image.sh 2 2,3 8 1000 1 50000 hylora all full gold 1e-3 > logs/hylora_all_train_gold_lr1e-3_full.log 2>&1 &
