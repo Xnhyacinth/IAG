@@ -26,7 +26,7 @@ from model.Imagemodel import ImageLitModel
 from data.data_interface import ImageDataModel
 import json
 import numpy as np
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 
 
 class MInterface(pl.LightningModule):
@@ -35,7 +35,8 @@ class MInterface(pl.LightningModule):
         total_parser = parent_args.add_argument_group("piplines args")
         # basic parameters
         # total_parser.add_argument("--checkpoint_dir", type=str, default="./checkpoint/", help="models are saved here")
-        total_parser.add_argument("--name", type=str, default="experiment_name", help="name of the experiment")
+        total_parser.add_argument(
+            "--name", type=str, default="experiment_name", help="name of the experiment")
         # total_parser.add_argument(
         #     "--bf16",
         #     type=bool,
@@ -50,7 +51,8 @@ class MInterface(pl.LightningModule):
         # total_parser.add_argument("--generation_max_length", type=int, default=32, help="Maximum length to use for generation")
         # total_parser.add_argument("--generation_num_beams", type=int, default=2, help="Number of beams to use for generation.")
         # total_parser.add_argument("--gradient_accumulation_steps", type=int, default=4, help="Number of accumulation_steps to use for generation.")
-        total_parser.add_argument("--seed", type=int, default=0, help="random seed for initialization")
+        total_parser.add_argument(
+            "--seed", type=int, default=0, help="random seed for initialization")
         # deepspeed
         # total_parser.add_argument("--deepspeed", type=str, default=None, help="Path to deepspeed config file.")
         # logging & evaluation strategies
@@ -60,11 +62,13 @@ class MInterface(pl.LightningModule):
 
         # total_parser.add_argument("--load_best_model_at_end", action="store_true", default=True)
         total_parser.add_argument("--use_checkpoint", action="store_true")
-        total_parser.add_argument("--local_rank", type=int, default=-1, help="For distributed training: local_rank")
-        total_parser.add_argument("--main_port", type=int, default=-1, help="Main port (for multi-node SLURM jobs)")
+        total_parser.add_argument(
+            "--local_rank", type=int, default=-1, help="For distributed training: local_rank")
+        total_parser.add_argument(
+            "--main_port", type=int, default=-1, help="Main port (for multi-node SLURM jobs)")
         # total_parser.add_argument("--write_results", action="store_true", help="save results")
         # total_parser.add_argument("--write_crossattention_scores", action="store_true", help="save dataset with cross-attention scores")
-        
+
         total_parser = ImageDataModel.add_data_specific_args(total_parser)
         total_parser = UniversalCheckpoint.add_argparse_args(total_parser)
         total_parser = ImageLitModel.add_model_specific_args(total_parser)
@@ -86,7 +90,7 @@ class MInterface(pl.LightningModule):
             strategy=args.strategy,
             devices=[i for i in range(int(args.devices))],
         )
-        
+
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)
         self.load_model(args, model_path)
 
@@ -97,7 +101,8 @@ class MInterface(pl.LightningModule):
             )
             print("load model from: ", args.load_checkpoints_path)
         else:
-            self.model = ImageLitModel(args, model_path=model_path, tokenizer=self.tokenizer)
+            self.model = ImageLitModel(
+                args, model_path=model_path, tokenizer=self.tokenizer)
 
     def load_data(self, data_path):
         assert data_path
@@ -112,13 +117,15 @@ class MInterface(pl.LightningModule):
                 example = json.loads(example)
             if not 'id' in example:
                 example['id'] = k
+            example["context"] = example.pop("compressed_prompt")[
+                "compressed_prompt"]
             examples.append(example)
-        ## egrave: is this needed?
+        # egrave: is this needed?
         if data_path is not None and data_path.endswith('.jsonl'):
             data.close()
 
         return examples
-    
+
     def compute_kernel_bias(self, vecs, n_components=256):
         """compute kernel and bias
         vecs.shape = [num_samples, embedding_size]
@@ -130,7 +137,6 @@ class MInterface(pl.LightningModule):
         W = np.dot(u, np.diag(1 / np.sqrt(s)))
         return W[:, :n_components], -mu
 
-
     def transform_and_normalize(self, vecs, kernel=None, bias=None):
         """ normalization
         """
@@ -138,26 +144,62 @@ class MInterface(pl.LightningModule):
             vecs = (vecs + bias).dot(kernel)
         return vecs / (vecs**2).sum(axis=1, keepdims=True)**0.5
 
-    
     def get_features(self, sample):
-        question = ['Question: Please write a high-quality answer for the given question using only the provided search results (some of which might be irrelevant). Only give me the answer and do not output any other words.'\
+        question = ['Question: Please write a high-quality answer for the given question using only the provided search results (some of which might be irrelevant). Only give me the answer and do not output any other words.'
                     'Question: ' + item + '\nAnswer:' for item in sample['question']]
         inputs = self.tokenizer(question, return_tensors='pt', padding=True)
         encoder = self.model.encoder
-        output = encoder(input_ids=inputs['input_ids'], attention_mask=inputs['attention_mask'], return_dict=True)
-        pooled_sentence = output.last_hidden_state # shape is [batch_size, seq_len, hidden_size]
-        pooled_sentence = np.array(torch.mean(pooled_sentence, dim=1).cpu().detach().numpy())  
+        output = encoder(
+            input_ids=inputs['input_ids'], attention_mask=inputs['attention_mask'], return_dict=True)
+        # shape is [batch_size, seq_len, hidden_size]
+        pooled_sentence = output.last_hidden_state
+        pooled_sentence = np.array(torch.mean(
+            pooled_sentence, dim=1).cpu().detach().numpy())
         kernel, bias = self.compute_kernel_bias(pooled_sentence, 255)
-        pooled_sentence = self.transform_and_normalize(pooled_sentence, kernel=kernel, bias=bias)
+        pooled_sentence = self.transform_and_normalize(
+            pooled_sentence, kernel=kernel, bias=bias)
         sample['features'] = pooled_sentence
-        print(pooled_sentence.shape())
         return sample
-    
+
+    def load_features(self, dataset, hg_datapath):
+        if 'NQ' in hg_datapath:
+            data_path = 'features/NQ'
+        else:
+            data_path = 'features/TQA'
+        dataset_features = load_dataset("json", data_files={
+                                        'train': f'{data_path}/train.json', 'eval': f'{data_path}/eval.json', 'test': f'{data_path}/test.json'})
+        for split in ['train', 'eval', 'test']:
+            if split in dataset:
+                dataset[split] = dataset[split].add_column(column=dataset_features[split]['features'], name='features')
+        return dataset
+
     def train(self):
         if self.args.hg_datapath is not None:
-            dataset = load_dataset(self.args.hg_datapath, f"ctxs{self.args.n_c}")
-            dataset = dataset.map(self.get_features, batched=True, desc="Features for Input")
+            with open(self.args.output_dir / 'logging.txt', 'a+') as f:
+                f.write(
+                    f'load data from {self.args.hg_datapath}, use compressed_ctxs_{self.args.n_c}')
+            # dataset = load_dataset(self.args.hg_datapath)
+            if 'TQA' in self.args.hg_datapath:
+                dataset = load_from_disk('dataset/Image/TQA')
+            else:
+                dataset = load_from_disk('dataset/Image/NQ')
+            # dataset['train'] = dataset['train'].select(range(1456))
+            # dataset['eval'] = dataset['eval'].select(range(223))
+            # dataset['test'] = dataset['test'].select(range(878))
+            if 'target' in dataset.column_names['test']:
+                dataset = dataset.select_columns(
+                    ['id', 'question', 'answers', 'target', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
+            else:
+                dataset = dataset.select_columns(
+                    ['id', 'question', 'answers', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
+            dataset = dataset.rename_column(
+                f'compressed_ctxs_{self.args.n_c}', 'context')
+            # dataset = dataset.map(self.get_features, batched=True, batch_size=2048, desc="Features for Input")
+            dataset = self.load_features(dataset, self.args.hg_datapath)
             print(dataset)
+            self.data_model = ImageDataModel(
+                self.tokenizer, self.args, dataset=dataset)
+            self.model.num_data = len(dataset['train'])
         else:
             train_data = self.load_data(self.args.train_data)
             dev_data = self.load_data(self.args.eval_data)
@@ -169,42 +211,54 @@ class MInterface(pl.LightningModule):
             # self.data_model = ImageDataModel(
             #     dataset['train'], dataset['eval'], dataset['test'], self.tokenizer, self.args)
             self.model.num_data = len(train_data)
-        
+        del self.model.encoder
         self.trainer.fit(self.model, self.data_model)
-    
-    def test(self, data=None):
+
+    def test(self, model=None, data=None):
         if data is not None:
             test_data = self.load_data(self.args.test_data)
-            self.data_model = ImageDataModel(self.tokenizer, self.args, test_data=test_data)
+            self.data_model = ImageDataModel(
+                self.tokenizer, self.args, test_data=test_data)
+        if model is not None:
+            self.trainer.test(model, self.data_model)
         self.trainer.test(self.model, self.data_model)
-    
+
     def save(self, save_name):
         if self.args.hylora:
-            torch.save(self.trainer.model.model.model.hypernet.state_dict(), save_name + '/hypernet.pth')
+            torch.save(self.trainer.model.model.model.hypernet.state_dict(
+            ), save_name + '/hypernet.pth')
         elif self.args.lora:
             self.trainer.model.model.model.save_pretrained(save_name)
             self.tokenizer.save_pretrained(save_name)
         # if you want to save the base model to call
         # trainer.model.base_model.save_pretrained(peft_model_id)
-        
     
-    
+    def load_from_checkpoint(self, checkpoint_path=None):
+        if checkpoint_path is None:
+            return self.model.load_from_checkpoint(self.trainer.checkpoint_callback.best_model_path)
+        return self.model.load_from_checkpoint(checkpoint_path)
+
+
 class UniversalCheckpoint(ModelCheckpoint):
     @staticmethod
     def add_argparse_args(parent_args):
-        parser = parent_args.add_argument_group("universal checkpoint callback")
+        parser = parent_args.add_argument_group(
+            "universal checkpoint callback")
 
         parser.add_argument("--monitor", default="val_em", type=str)
         parser.add_argument("--mode", default="max", type=str)
         parser.add_argument("--save_ckpt_path", default="./ckpt/", type=str)
         parser.add_argument("--load_ckpt_path", default="./ckpt/", type=str)
-        parser.add_argument("--filename", default="{epoch}-{step}-{val_em:.2f}", type=str)
+        parser.add_argument(
+            "--filename", default="{epoch}-{step}-{val_em:.2f}", type=str)
         parser.add_argument("--save_last", action="store_true", default=True)
         parser.add_argument("--save_top_k", default=-1, type=float)
         parser.add_argument("--every_n_train_steps", default=None, type=float)
-        parser.add_argument("--save_weights_only", action="store_true", default=False)
+        parser.add_argument("--save_weights_only",
+                            action="store_true", default=False)
         parser.add_argument("--every_n_epochs", default=None, type=int)
-        parser.add_argument("--save_on_train_epoch_end", action="store_true", default=None)
+        parser.add_argument("--save_on_train_epoch_end",
+                            action="store_true", default=None)
         return parent_args
 
     def __init__(self, args):

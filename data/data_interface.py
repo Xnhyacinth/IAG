@@ -55,22 +55,19 @@ class ImageDataset(Dataset):
             f = self.title_prefix + " {} " + self.passage_prefix + " {}"
             contexts = example['ctxs'][:self.n_context]
             passages = [f.format(c['title'], c['text']) for c in contexts]
-            scores = [float(c['score']) for c in contexts]
-            scores = torch.tensor(scores)
             # TODO(egrave): do we want to keep this?
             if len(contexts) == 0:
                 contexts = [question]
         else:
-            passages, scores = None, None
+            passages = None
 
         return {
             'index': index,
             'question': question,
             'target': target,
             'passages': passages,
-            'scores': scores,
-            'context': example['compressed_prompt']['compressed_prompt'],
-            'features': example['features'][0],
+            'context': example['context'],
+            'features': example['features'],
             'answers': example['answers']
         }
         
@@ -90,6 +87,7 @@ class ImageDataModel(pl.LightningDataModule):
         parser.add_argument('--num_workers', default=10, type=int)
         parser.add_argument('--batch_size', default=1, type=int)
         parser.add_argument("--gold", action="store_true", help="Whether use gold passage")
+        parser.add_argument("--cbqa", action="store_true", help="Whether use none passage")
         parser.add_argument("--train_data", type=str, default=None, help="path of train data")
         parser.add_argument("--eval_data", type=str, default=None, help="path of eval data")
         parser.add_argument("--test_data", type=str, default=None, help="path of test data")
@@ -101,15 +99,19 @@ class ImageDataModel(pl.LightningDataModule):
 
         return parent_args
 
-    def __init__(self, tokenizer, args, train_data=None, val_data=None, test_data=None):
+    def __init__(self, tokenizer, args, train_data=None, val_data=None, test_data=None, dataset=None):
         super().__init__()
         self.batchsize = args.batch_size
         self.args = args
         self.tokenizer = tokenizer
-
-        self.train_data = ImageDataset(train_data, args.n_context)
-        self.valid_data = ImageDataset(val_data, args.n_context)
-        self.test_data = ImageDataset(test_data, args.n_context)
+        if dataset is None:
+            self.train_data = ImageDataset(train_data, args.n_context)
+            self.valid_data = ImageDataset(val_data, args.n_context)
+            self.test_data = ImageDataset(test_data, args.n_context)
+        else:
+            self.train_data = ImageDataset(dataset['train'], args.n_context)
+            self.valid_data = ImageDataset(dataset['eval'], args.n_context)
+            self.test_data = ImageDataset(dataset['test'], args.n_context)
 
     def train_dataloader(self):
         return DataLoader(self.train_data, shuffle=True, collate_fn=self.collate_fn, batch_size=self.batchsize,
@@ -146,8 +148,8 @@ class ImageDataModel(pl.LightningDataModule):
         target_mask = target["attention_mask"].bool()
         target_ids = target_ids.masked_fill(~target_mask, -100)
 
-        def append_question(example, gold=False):
-            if example['passages'] is None:
+        def append_question(example, gold=False, cbqa=False):
+            if example['passages'] is None or cbqa:
                 return [example['question']]
             if gold:
                 return [example['question'] + " " + t for t in example['passages'][:1]]
@@ -176,8 +178,8 @@ class ImageDataModel(pl.LightningDataModule):
                                                      self.tokenizer,
                                                      self.args.text_maxlength)
 
-        if self.args.gold:
-            context = [append_question(example, self.args.gold) for example in batch]
+        if self.args.cbqa or self.args.gold:
+            context = [append_question(example, self.args.gold, self.args.cbqa) for example in batch]
         else:
             context = [[ex['question'] + "\n" + ex['context']] for ex in batch]
         context_ids, context_masks = encode_passages(context,

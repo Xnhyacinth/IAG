@@ -137,6 +137,7 @@ class ImageLitModel(pl.LightningModule):
                                     (max(1, int(self.args.devices)) * self.trainer.accumulate_grad_batches))
             else:
                 self.total_step = self.args.max_steps
+            del self.model.encoder
             print('Total training step:', self.total_step)
             if self.args.do_distill:
                 self.load_teacher(self.args)

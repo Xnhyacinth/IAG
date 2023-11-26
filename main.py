@@ -10,6 +10,7 @@ from copy import deepcopy
 import torch
 import os
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
+os.environ['CURL_CA_BUNDLE'] = ''
 
 def main(opt):
     # set seed
@@ -40,8 +41,8 @@ def main(opt):
     # model.hparams.lr = new_lr
     # print(new_lr)
     # test
-    model.trainer.checkpoint_callback.best_model_path
-    model.test()
+    model_best = model.load_from_checkpoint()
+    model.test(model=model_best)
     # Save our LoRA model & tokenizer results
     model_id=f"{opt.save_ckpt_path}/results"
     model.save(model_id)

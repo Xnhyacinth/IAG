@@ -12,6 +12,7 @@ import argparse
 from pathlib import Path
 from tqdm import tqdm
 from data import load_data
+import numpy as np
 
 def load_data_compress(data_path=None, global_rank=-1, world_size=-1):
     assert data_path
@@ -53,37 +54,84 @@ class Simcsewrap(nn.Module):
         features=self.tanh(features)
         return features
 
-# parser = argparse.ArgumentParser()
-# parser.add_argument("--datapath", type=str, default='data')
-# parser.add_argument("--dataset", type=str, default='NQ')
-# parser.add_argument("--d", type=str, default='test')
-# opt = parser.parse_args()
-# checkpoint_path = Path(f"data/{opt.dataset}/{opt.d}")
-# checkpoint_path.mkdir(parents=True, exist_ok=True)
-# data = load_data_compress(f"{opt.datapath}/{opt.dataset}/{opt.d}.json")
-# model_path_simcse_roberta = "princeton-nlp/sup-simcse-roberta-large"
-# tokenizer = AutoTokenizer.from_pretrained(model_path_simcse_roberta)
-# model = Simcsewrap(model_path_simcse_roberta, 255).cuda()
-# new_data = []
-# for d in tqdm(data, desc='Length'):
-#     inputs = tokenizer(d['question'],
-#                         max_length=256,
-#                         padding='max_length',
-#                         truncation='longest_first',
-#                         return_tensors="pt").to("cuda")
-#     with torch.no_grad():
-#         embeddings = model(
-#             inputs["input_ids"],
-#             # inputs["token_type_ids"],
-#             inputs["attention_mask"],
-#             )
-#     d['features'] = embeddings.cpu().numpy().tolist()
-#     new_data.append(d)
 
-da = "dev"
-data0 = load_data(f"/home/huanxuan/FiD/open_domain_data/NQ/{da}.json")
-data = load_data_compress(f"/home/huanxuan/FiD/pl/data/NQ/{da}/{da}.json")
-for d, d0 in tqdm(zip(data, data0), desc='Length'):
-    d["ctxs"] = d0["ctxs"]
-with open(f"/home/huanxuan/FiD/pl/data/NQ/{da}.json", "w") as f:
-    json.dump(data, f, indent=4)
+def compute_kernel_bias(vecs, n_components=256):
+    """compute kernel and bias
+    vecs.shape = [num_samples, embedding_size]
+    transfer:y = (x + bias).dot(kernel)
+    """
+    mu = vecs.mean(axis=0, keepdims=True)
+    cov = np.cov(vecs.T)
+    u, s, vh = np.linalg.svd(cov)
+    W = np.dot(u, np.diag(1 / np.sqrt(s)))
+    return W[:, :n_components], -mu
+
+
+def transform_and_normalize(vecs, kernel=None, bias=None):
+    """ normalization
+    """
+    if not (kernel is None or bias is None):
+        vecs = (vecs + bias).dot(kernel)
+    return vecs / (vecs**2).sum(axis=1, keepdims=True)**0.5
+
+
+def get_features(sample, tokenizer, encoder):
+    question = ['Question: Please write a high-quality answer for the given question using only the provided search results (some of which might be irrelevant). Only give me the answer and do not output any other words.'\
+                'Question: ' + item + '\nAnswer:' for item in sample['question']]
+    inputs = tokenizer(question, return_tensors='pt', padding=True)
+    output = encoder(input_ids=inputs['input_ids'], attention_mask=inputs['attention_mask'], return_dict=True)
+    pooled_sentence = output.last_hidden_state # shape is [batch_size, seq_len, hidden_size]
+    pooled_sentence = np.array(torch.mean(pooled_sentence, dim=1).cpu().detach().numpy())  
+    kernel, bias = compute_kernel_bias(pooled_sentence, 255)
+    pooled_sentence = transform_and_normalize(pooled_sentence, kernel=kernel, bias=bias)
+    sample['features'] = pooled_sentence
+    return sample
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--datapath", type=str, default='data')
+parser.add_argument("--dataset", type=str, default='TQA')
+parser.add_argument("--d", type=str, default='train')
+opt = parser.parse_args()
+checkpoint_path = Path(f"features/{opt.dataset}/{opt.d}")
+checkpoint_path.mkdir(parents=True, exist_ok=True)
+data = load_data_compress(f"{opt.datapath}/{opt.dataset}/{opt.d}.json")
+model_path_simcse_roberta = "t5-base"
+tokenizer = AutoTokenizer.from_pretrained(model_path_simcse_roberta)
+# model = Simcsewrap(model_path_simcse_roberta, 255).cuda()
+model = AutoModel.from_pretrained(model_path_simcse_roberta).to('cuda:0')
+new_data = []
+# for d in tqdm(data, desc='Length'):
+for d in tqdm(range(0, len(data), 1024), desc='Length'):
+    qs = ['Question: ' + item['question'] + '\nAnswer:' for item in data[d:d+1024]]
+    # inputs = tokenizer(d['question'], return_tensors='pt', padding=True).to('cuda:0')
+    inputs = tokenizer(qs, #d['question']
+                        max_length=64,
+                        padding='max_length',
+                        truncation='longest_first',
+                        return_tensors="pt").to('cuda:0')
+    with torch.no_grad():
+        embeddings = model.encoder(input_ids=inputs['input_ids'], attention_mask=inputs['attention_mask'], return_dict=True)
+    pooled_sentence = embeddings.last_hidden_state # shape is [batch_size, seq_len, hidden_size]
+    pooled_sentence = np.array(torch.mean(pooled_sentence, dim=1).cpu().detach().numpy())
+    # print(pooled_sentence)
+    kernel, bias = compute_kernel_bias(pooled_sentence, 255)
+    pooled_sentence = transform_and_normalize(pooled_sentence, kernel=kernel, bias=bias)
+    # d['features'] = embeddings.cpu().numpy().tolist()
+    # new_d = {}
+    # new_d['features'] = pooled_sentence
+    # print(pooled_sentence.shape)
+    for i in range(pooled_sentence.shape[0]):
+        new_d = {}
+        new_d['features'] = pooled_sentence[i].tolist()
+        new_data.append(new_d)
+    # new_data.append(new_d)
+print(len(new_data))
+with open(f"{checkpoint_path}.json", "w") as f:
+    json.dump(new_data, f, indent=4)
+# da = "dev"
+# data0 = load_data(f"/home/huanxuan/FiD/open_domain_data/NQ/{da}.json")
+# data = load_data_compress(f"/home/huanxuan/FiD/pl/data/NQ/{da}/{da}.json")
+# for d, d0 in tqdm(zip(data, data0), desc='Length'):
+#     d["ctxs"] = d0["ctxs"]
+# with open(f"/home/huanxuan/FiD/pl/data/NQ/{da}.json", "w") as f:
+#     json.dump(data, f, indent=4)
