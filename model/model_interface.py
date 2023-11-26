@@ -82,6 +82,8 @@ class MInterface(pl.LightningModule):
         # self.lg = logger
         self.checkpoint_callback = UniversalCheckpoint(args)
         tb_logger = loggers.TensorBoardLogger(save_dir=args.logging_dir)
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)
+        self.load_model(args, model_path)
         self.trainer = pl.Trainer.from_argparse_args(
             args,
             logger=tb_logger,
@@ -90,9 +92,6 @@ class MInterface(pl.LightningModule):
             strategy=args.strategy,
             devices=[i for i in range(int(args.devices))],
         )
-
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained(model_path)
-        self.load_model(args, model_path)
 
     def load_model(self, args, model_path):
         if args.load_checkpoints_path != "":
@@ -194,6 +193,7 @@ class MInterface(pl.LightningModule):
                     ['id', 'question', 'answers', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
             dataset = dataset.rename_column(
                 f'compressed_ctxs_{self.args.n_c}', 'context')
+            # dataset['context'] = dataset['context']['compressed_prompt']
             # dataset = dataset.map(self.get_features, batched=True, batch_size=2048, desc="Features for Input")
             dataset = self.load_features(dataset, self.args.hg_datapath)
             print(dataset)

@@ -6,4 +6,3 @@ config = datasets.DownloadConfig(resume_download=True, max_retries=100)
 data = load_dataset("Xnhyacinth/Image", 'NQ', download_config=config)
 print(data)
 data.save_to_disk('dataset/Image/NQ')
-

@@ -66,7 +66,7 @@ class ImageDataset(Dataset):
             'question': question,
             'target': target,
             'passages': passages,
-            'context': example['context'],
+            'context': example['context']['compressed_prompt'],
             'features': example['features'],
             'answers': example['answers']
         }
@@ -177,7 +177,6 @@ class ImageDataModel(pl.LightningDataModule):
         passage_ids, passage_masks = encode_passages(text_passages,
                                                      self.tokenizer,
                                                      self.args.text_maxlength)
-
         if self.args.cbqa or self.args.gold:
             context = [append_question(example, self.args.gold, self.args.cbqa) for example in batch]
         else:

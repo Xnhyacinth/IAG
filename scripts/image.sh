@@ -23,14 +23,15 @@ train_teacher=${9:-"no"}
 gold=${10:-"False"}
 lr=${11:-"1e-4"}
 n_c=${12:-"0"}
-dataset=${13:-"NQ"}
+size=${13:-"base"}
+dataset=${14:-"NQ"}
 default_root_dir="output"
-teacher_model="pretrained_models/nq_reader_base"
+teacher_model="pretrained_models/nq_reader_$size"
 echo "batch_size: ${batch_size}"
 echo "max_steps: ${max_steps}"
 echo "lr: ${lr}"
 export MASTER_ADDR=localhost
-export MASTER_PORT="52997"
+export MASTER_PORT="52998"
 
 context_maxlength=512
 if [ "$name" = "lora" ];then
@@ -64,19 +65,19 @@ if [ "$gold" = "cbqa" ];then
   extra_args="$extra_args --cbqa"
   name="${name}_cbqa"
 fi
-name="${name}_lr${lr}"
 if [ "$n_c" != "0" ];then
   hg_datapath="Xnhyacinth/Image/NQ"
   if [ "$dataset" == "TQA" ];then
     hg_datapath="Xnhyacinth/Image/TQA"
-    teacher_model="pretrained_models/tqa_reader_base"
+    teacher_model="pretrained_models/tqa_reader_$size"
     default_root_dir="output_tqa"
   fi
   extra_args="$extra_args --hg_datapath ${hg_datapath} --n_c ${n_c}"
   name="${name}_hg_ctxs${n_c}"
   echo "data from ${hg_datapath}"
 fi
-extra_args="$extra_args --name $name"
+name="${name}_lr${lr}_${size}"
+extra_args="$extra_args --name $name" # --resume_from_checkpoint output/hylora_all_lr1e-3/ckpt/last.ckpt
 echo "name: ${name}"
 echo "default_root_dir: ${default_root_dir}"
 
