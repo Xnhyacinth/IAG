@@ -30,7 +30,7 @@ echo "batch_size: ${batch_size}"
 echo "max_steps: ${max_steps}"
 echo "lr: ${lr}"
 export MASTER_ADDR=localhost
-export MASTER_PORT="52993"
+export MASTER_PORT="52997"
 
 context_maxlength=512
 if [ "$name" = "lora" ];then
@@ -69,6 +69,7 @@ if [ "$n_c" != "0" ];then
   hg_datapath="Xnhyacinth/Image/NQ"
   if [ "$dataset" == "TQA" ];then
     hg_datapath="Xnhyacinth/Image/TQA"
+    teacher_model="pretrained_models/tqa_reader_base"
     default_root_dir="output_tqa"
   fi
   extra_args="$extra_args --hg_datapath ${hg_datapath} --n_c ${n_c}"
@@ -96,14 +97,14 @@ deepspeed --include localhost:$gpus --master_port $MASTER_PORT main.py \
         --context_maxlength ${context_maxlength} \
         --val_check_interval ${val_check_interval} \
         --num_workers 4 \
-        --default_root_dir output_tqa \
+        --default_root_dir ${default_root_dir} \
         --n_context 100 \
         --warmup_ratio 0.08 \
         --train_data data/NQ/train.json \
         --eval_data data/NQ/dev.json \
         --test_data data/NQ/test.json \
         --model_name t5-base \
-        --teacher_model pretrained_models/nq_reader_base \
+        --teacher_model ${teacher_model} \
         --t_learning_rate 5e-05 \
         --alpha_kd 0.6 \
         --temperature 3.0 \
