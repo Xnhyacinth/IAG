@@ -22,7 +22,7 @@ distill=${8:-"kl"}
 train_teacher=${9:-"no"}
 gold=${10:-"gen"}
 lr=${11:-"1e-4"}
-n_c=${12:-"0"}
+n_c=${12:-"1"}
 size=${13:-"base"}
 dataset=${14:-"NQ"}
 train=${15:-"train"}
@@ -84,6 +84,7 @@ file=main.py
 if [ "$train" = "test" ];then
   file=test.py
   load_checkpoints_path="output/hylora_kl_gold_lr1e-3/ckpt/epoch=4-step=48584-val_em=36.32.ckpt"
+  default_root_dir='output_test'
   name="${name}_test"
 fi
 extra_args="$extra_args --name $name" # --resume_from_checkpoint output/hylora_all_lr1e-3/ckpt/last.ckpt

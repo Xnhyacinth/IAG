@@ -241,13 +241,14 @@ class ImageLitModel(pl.LightningModule):
                 p_t = F.softmax(t_logits / 4.0, dim=-1)
                 loss += (
                     F.kl_div(p_s, p_t, reduction='batchmean')
-                )
-                # print(F.kl_div(p_s, p_t, reduction='batchmean') / logits.shape[1] * 5)
+                ) / 100
 
             if self.args.use_attn:
                 attn = outputs[-1]
                 t_attn = teacher_outputs[-1]
-
+                attn = attn[[0, attn.size(0) // 2, -1]]
+                t_attn = t_attn[[0, t_attn.size(0) // 2, -1]]
+                
                 loss_a = [
                     att_mse_loss(a.repeat(t_a.size(0) // a.size(0), 1, 1, 1), 
                                  t_a,context_mask.view(context_mask.size(0) * context_mask.size(1), -1).repeat(t_a.size(0) // a.size(0), 1))
@@ -257,6 +258,8 @@ class ImageLitModel(pl.LightningModule):
 
                 d_attn = outputs[4]
                 d_t_attn = teacher_outputs[4]
+                d_attn = d_attn[[0, d_attn.size(0) // 2, -1]]
+                d_t_attn = d_t_attn[[0, d_t_attn.size(0) // 2, -1]]
                 loss_a = [
                     att_ce_loss(
                         a.repeat(t_a.size(0) // a.size(0), 1, 1, 1),
@@ -272,6 +275,8 @@ class ImageLitModel(pl.LightningModule):
             if self.args.use_hidden:
                 hd = outputs[-2]
                 t_hd = teacher_outputs[-2]
+                hd = hd[[0, hd.size(0) // 2, -1]]
+                t_hd = t_hd[[0, t_hd.size(0) // 2, -1]]
 
                 loss_h = [
                     cos_loss(
@@ -287,6 +292,8 @@ class ImageLitModel(pl.LightningModule):
                 
                 d_hd = outputs[3]
                 d_t_hd = teacher_outputs[3]
+                d_hd = d_hd[[0, d_hd.size(0) // 2, -1]]
+                d_t_hd = d_t_hd[[0, d_t_hd.size(0) // 2, -1]]
                 loss_h = [
                     cos_loss(
                         h.repeat(context_mask.size(1), 1, 1),

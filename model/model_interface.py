@@ -180,7 +180,7 @@ class MInterface(pl.LightningModule):
         if self.args.hg_datapath is not None:
             with open(self.args.output_dir / 'logging.txt', 'a+') as f:
                 f.write(
-                    f'load data from {self.args.hg_datapath}, use compressed_ctxs_{self.args.n_c}')
+                    f'load data from {self.args.hg_datapath}, use compressed_ctxs_{self.args.n_c}\n')
             # dataset = load_dataset(self.args.hg_datapath)
             if 'TQA' in self.args.hg_datapath:
                 dataset = load_from_disk('dataset/Image/TQA')
