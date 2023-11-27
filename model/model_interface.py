@@ -95,8 +95,9 @@ class MInterface(pl.LightningModule):
 
     def load_model(self, args, model_path):
         if args.load_checkpoints_path != "":
+            print(f'model_path: {args.load_checkpoints_path}')
             self.model = ImageLitModel.load_from_checkpoint(
-                args.load_checkpoints_path, args=args, model_path=model_path
+                args.load_checkpoints_path, args=args, model_path=model_path, tokenizer=self.tokenizer
             )
             print("load model from: ", args.load_checkpoints_path)
         else:
@@ -167,9 +168,12 @@ class MInterface(pl.LightningModule):
             data_path = 'features/TQA'
         dataset_features = load_dataset("json", data_files={
                                         'train': f'{data_path}/train.json', 'eval': f'{data_path}/eval.json', 'test': f'{data_path}/test.json'})
-        for split in ['train', 'eval', 'test']:
-            if split in dataset:
-                dataset[split] = dataset[split].add_column(column=dataset_features[split]['features'], name='features')
+        if 'test' not in self.args.name:
+            for split in ['train', 'eval', 'test']:
+                if split in dataset:
+                    dataset[split] = dataset[split].add_column(column=dataset_features[split]['features'], name='features')
+        else:
+            dataset = dataset.add_column(column=dataset_features['test']['features'], name='features')
         return dataset
 
     def train(self):
@@ -180,17 +184,15 @@ class MInterface(pl.LightningModule):
             # dataset = load_dataset(self.args.hg_datapath)
             if 'TQA' in self.args.hg_datapath:
                 dataset = load_from_disk('dataset/Image/TQA')
-            else:
-                dataset = load_from_disk('dataset/Image/NQ')
-            # dataset['train'] = dataset['train'].select(range(1456))
-            # dataset['eval'] = dataset['eval'].select(range(223))
-            # dataset['test'] = dataset['test'].select(range(878))
-            if 'target' in dataset.column_names['test']:
                 dataset = dataset.select_columns(
                     ['id', 'question', 'answers', 'target', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
             else:
+                dataset = load_from_disk('dataset/Image/NQ')
                 dataset = dataset.select_columns(
                     ['id', 'question', 'answers', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
+            # dataset['train'] = dataset['train'].select(range(1456))
+            # dataset['eval'] = dataset['eval'].select(range(223))
+            # dataset['test'] = dataset['test'].select(range(878))
             dataset = dataset.rename_column(
                 f'compressed_ctxs_{self.args.n_c}', 'context')
             # dataset['context'] = dataset['context']['compressed_prompt']
@@ -216,9 +218,25 @@ class MInterface(pl.LightningModule):
 
     def test(self, model=None, data=None):
         if data is not None:
-            test_data = self.load_data(self.args.test_data)
+            with open(self.args.output_dir / 'logging.txt', 'a+') as f:
+                f.write(
+                    f'load data from {data}, use compressed_ctxs_{self.args.n_c}')
+            # dataset = load_dataset(self.args.hg_datapath)
+            if 'TQA' in data:
+                dataset = load_from_disk('dataset/Image/TQA/test')
+                dataset = dataset.select_columns(
+                    ['id', 'question', 'answers', 'target', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
+            else:
+                # dataset = load_dataset('Xnhyacinth/Image', 'NQ', split='test')
+                dataset = load_from_disk('dataset/Image/NQ/test')
+                dataset = dataset.select_columns(
+                    ['id', 'question', 'answers', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
+            dataset = dataset.rename_column(
+                f'compressed_ctxs_{self.args.n_c}', 'context')
+            dataset = self.load_features(dataset, data)
+            print(dataset)
             self.data_model = ImageDataModel(
-                self.tokenizer, self.args, test_data=test_data)
+                self.tokenizer, self.args, dataset=dataset)
         if model is not None:
             self.trainer.test(model, self.data_model)
         self.trainer.test(self.model, self.data_model)

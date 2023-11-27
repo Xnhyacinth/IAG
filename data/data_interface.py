@@ -109,9 +109,13 @@ class ImageDataModel(pl.LightningDataModule):
             self.valid_data = ImageDataset(val_data, args.n_context)
             self.test_data = ImageDataset(test_data, args.n_context)
         else:
-            self.train_data = ImageDataset(dataset['train'], args.n_context)
-            self.valid_data = ImageDataset(dataset['eval'], args.n_context)
-            self.test_data = ImageDataset(dataset['test'], args.n_context)
+            if 'test' not in args.name:
+                self.train_data = ImageDataset(dataset['train'], args.n_context)
+                self.valid_data = ImageDataset(dataset['eval'], args.n_context)
+                self.test_data = ImageDataset(dataset['test'], args.n_context)
+            else:
+                self.test_data = ImageDataset(dataset, args.n_context)
+            
 
     def train_dataloader(self):
         return DataLoader(self.train_data, shuffle=True, collate_fn=self.collate_fn, batch_size=self.batchsize,

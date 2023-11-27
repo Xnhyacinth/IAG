@@ -28,24 +28,8 @@ def main(opt):
             o.write(f'{k} = {v}\n')
             
     model = MInterface(opt, opt.model_name)
-    # train        
-    model.train()
-    # tuner = pl.tuner.tuning.Tuner(deepcopy(model.trainer))
-    # # new_batch_size = tuner.scale_batch_size(model.model, datamodule=model.data_model, init_val=torch.cuda.device_count())
-    # new_lr = tuner.lr_find(model.model, datamodule=model.data_model)
-    # del tuner
-    # import gc
-    # gc.collect()
-    # # model.hparams.batch_size = new_batch_size
-    # # print(new_batch_size)
-    # model.hparams.lr = new_lr
-    # print(new_lr)
     # test
-    model.trainer.checkpoint_callback.best_model_path
-    model.test()
-    # Save our LoRA model & tokenizer results
-    model_id=f"{opt.save_ckpt_path}/results"
-    model.save(model_id)
+    model.test(data=opt.hg_datapath)
 
 if __name__ == "__main__":
     total_parser = ArgumentParser("Image")

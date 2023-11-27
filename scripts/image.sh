@@ -20,18 +20,23 @@ max_steps=${6:-"100000"}
 name=${7:-"hylora"}
 distill=${8:-"kl"}
 train_teacher=${9:-"no"}
-gold=${10:-"False"}
+gold=${10:-"gen"}
 lr=${11:-"1e-4"}
 n_c=${12:-"0"}
 size=${13:-"base"}
 dataset=${14:-"NQ"}
+train=${15:-"train"}
 default_root_dir="output"
 teacher_model="pretrained_models/nq_reader_$size"
 echo "batch_size: ${batch_size}"
 echo "max_steps: ${max_steps}"
 echo "lr: ${lr}"
 export MASTER_ADDR=localhost
-export MASTER_PORT="52998"
+random_port=$((RANDOM%(65535-1024+1)+1024))
+while [[ $(ss -tln | grep ":$random_port") ]]; do
+    random_port=$((RANDOM%(65535-1024+1)+1024))
+done
+export MASTER_PORT=${random_port}
 
 context_maxlength=512
 if [ "$name" = "lora" ];then
@@ -59,11 +64,9 @@ if [ "$train_teacher" = "full" ];then
 fi
 if [ "$gold" = "gold" ];then
   extra_args="$extra_args --gold"
-  name="${name}_gold"
 fi
 if [ "$gold" = "cbqa" ];then
   extra_args="$extra_args --cbqa"
-  name="${name}_cbqa"
 fi
 if [ "$n_c" != "0" ];then
   hg_datapath="Xnhyacinth/Image/NQ"
@@ -76,12 +79,18 @@ if [ "$n_c" != "0" ];then
   name="${name}_hg_ctxs${n_c}"
   echo "data from ${hg_datapath}"
 fi
-name="${name}_lr${lr}_${size}"
+name="${name}_${gold}_lr${lr}_${size}"
+file=main.py
+if [ "$train" = "test" ];then
+  file=test.py
+  load_checkpoints_path="output/hylora_kl_gold_lr1e-3/ckpt/epoch=4-step=48584-val_em=36.32.ckpt"
+  name="${name}_test"
+fi
 extra_args="$extra_args --name $name" # --resume_from_checkpoint output/hylora_all_lr1e-3/ckpt/last.ckpt
 echo "name: ${name}"
 echo "default_root_dir: ${default_root_dir}"
 
-deepspeed --include localhost:$gpus --master_port $MASTER_PORT main.py \
+deepspeed --include localhost:$gpus --master_port $MASTER_PORT ${file} \
         --use_checkpoint \
         --accelerator gpu \
         --devices ${num_gpus} \

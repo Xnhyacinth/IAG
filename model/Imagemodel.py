@@ -240,7 +240,7 @@ class ImageLitModel(pl.LightningModule):
                 p_s = F.log_softmax(logits / 4.0, dim=-1)
                 p_t = F.softmax(t_logits / 4.0, dim=-1)
                 loss += (
-                    F.kl_div(p_s, p_t, reduction='batchmean') / logits.shape[1]
+                    F.kl_div(p_s, p_t, reduction='batchmean')
                 )
                 # print(F.kl_div(p_s, p_t, reduction='batchmean') / logits.shape[1] * 5)
 
@@ -308,9 +308,7 @@ class ImageLitModel(pl.LightningModule):
                 # return_dict=False,
             )[0]
         self.log('train/loss', loss, prog_bar=True)
-        # self.log('train_loss', loss, prog_bar=True)
         self.log('train/lr', self.lr_schedulers().get_last_lr()[0])
-        # self.log('global_step', torch.Tensor(self.global_step))
         if self.args.train_teacher:
             self.log('train/t_lr', self.t_scheduler.get_last_lr()[0])
         return loss
@@ -325,7 +323,6 @@ class ImageLitModel(pl.LightningModule):
                 features=features,
                 output_attentions=True,
                 output_hidden_states=True
-                # return_dict=False,
             )[0]
         self.log('val/loss', loss, prog_bar=True)
         outputs = self.model.generate(
@@ -336,30 +333,22 @@ class ImageLitModel(pl.LightningModule):
         # )
         for k, (o, gold) in enumerate(zip(outputs, answers)):
             ans = self.tokenizer.decode(o, skip_special_tokens=True)
-            # t_ans = self.tokenizer.decode(t_o, skip_special_tokens=True)
-            # gold = self.val_dataloader().datastet.get_example(idx[k])['answers']
             scores.append(ems(ans, gold))
-            # t_scores.append(ems(t_ans, gold))
         if self.args.do_distill:
             scores_teacher, t_scores_teacher = [], []  
-            # outputs_teacher = self.t_model.generate(
-            #             input_ids=context_ids, attention_mask=context_mask, max_length=32
-            #         )
             t_outputs_teacher = self.t_model.generate(
                 input_ids=t_context_ids, attention_mask=t_context_mask, max_length=50
             )
             for k, (t_o_t, gold) in enumerate(zip(t_outputs_teacher, answers)):
                 # ans_t = self.tokenizer.decode(o_t, skip_special_tokens=True)
                 t_ans_t = self.tokenizer.decode(t_o_t, skip_special_tokens=True)
-                # gold = self.val_dataloader().datastet.get_example(idx[k])['answers']
-                # scores_teacher.append(ems(ans_t, gold))
                 t_scores_teacher.append(ems(t_ans_t, gold))
             return scores, t_scores_teacher
         return scores
     
     def test_step(self, batch, batch_idx):
         (idx, labels, _, context_ids, context_mask, t_context_ids, t_context_mask, features, answers) = batch
-        scores, t_scores = [], []
+        scores = []
         loss = self.model(
                 input_ids=context_ids,
                 attention_mask=context_mask,
@@ -367,36 +356,14 @@ class ImageLitModel(pl.LightningModule):
                 features=features,
                 output_attentions=True,
                 output_hidden_states=True
-                # return_dict=False,
             )[0]
         self.log('test/loss', loss)
         outputs = self.model.generate(
                     input_ids=context_ids, attention_mask=context_mask, features=features, max_length=50
                 )
-        # t_outputs = self.model.model.model.generate(
-        #     input_ids=t_context_ids, attention_mask=t_context_mask, max_length=32
-        # )
         for k, (o, gold) in enumerate(zip(outputs, answers)):
             ans = self.tokenizer.decode(o, skip_special_tokens=True)
-            # t_ans = self.tokenizer.decode(t_o, skip_special_tokens=True)
-            # gold = self.val_dataloader().datastet.get_example(idx[k])['answers']
             scores.append(ems(ans, gold))
-            # t_scores.append(ems(t_ans, gold))
-        if self.args.do_distill:
-            scores_teacher, t_scores_teacher = [], []  
-            # outputs_teacher = self.t_model.generate(
-            #             input_ids=context_ids, attention_mask=context_mask, max_length=32
-            #         )
-            t_outputs_teacher = self.t_model.generate(
-                input_ids=t_context_ids, attention_mask=t_context_mask, max_length=50
-            )
-            for k, (t_o_t, gold) in enumerate(zip(t_outputs_teacher, answers)):
-                # ans_t = self.tokenizer.decode(o_t, skip_special_tokens=True)
-                t_ans_t = self.tokenizer.decode(t_o_t, skip_special_tokens=True)
-                # gold = self.val_dataloader().datastet.get_example(idx[k])['answers']
-                # scores_teacher.append(ems(ans_t, gold))
-                t_scores_teacher.append(ems(t_ans_t, gold))
-            return scores, t_scores_teacher
         return scores
         
     def validation_epoch_end(self, validation_step_outputs):
@@ -426,24 +393,11 @@ class ImageLitModel(pl.LightningModule):
 
     def test_epoch_end(self, test_step_outputs):
          # compute metrics
-        # exactmatch, t_exactmatch = self.compute_metrics([_[0] for _ in validation_step_outputs]), self.compute_metrics([_[1] for _ in validation_step_outputs])
         exactmatch = [_[0] for _ in test_step_outputs]
         em = self.compute_metrics(exactmatch)
         self.log("test/em", em*100)
-        # self.log("long context exactmatch", t_exactmatch)
-        # log_em = self.compute_metrics(exactmatch, log=True)
-        log = f"Test | {self.global_step} / {self.total_step} |"
+        log = f"Test | "
         log += (f"evaluation: {100*em:.2f}EM |")
-        # teacher
-        if self.args.do_distill:
-            t_exactmatch_teacher = [_[1] for _ in test_step_outputs]
-            t_em_teacher = self.compute_metrics(t_exactmatch_teacher)
-            # self.log("teacher exactmatch", exactmatch_teacher)
-            self.log("test/teacher long context em", t_em_teacher)
-            # log_t_em_teacher = self.compute_metrics(t_exactmatch_teacher, log=True)
-            log += (f"teacher evaluation long: {100*t_em_teacher:.2f}EM |")
-        # log += f"lr: {self.lr_schedulers().get_last_lr()[0]:.5f}\n"
-        # self.lg.info(log)
         with open(self.args.output_dir / 'logging.txt', 'a+') as f:
             f.write(log)
             f.close()
