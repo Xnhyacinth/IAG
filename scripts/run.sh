@@ -34,4 +34,7 @@
 # nohup bash scripts/image.sh 2 2,7 4 1000 2 50000 hylora kl no gold 1e-3 1 TQA > logs_tqa/hylora_kl_notrain_gold_lr1e-3.log 2>&1 &
 
 # tqa_hylora_cbqa
-nohup bash scripts/image.sh 2 6,7 4 1000 4 50000 fid no no cbqa 1e-3 1 base TQA train > logs_tqa/fid_nods_notrain_cbqa_lr1e-3_base.log 2>&1 &
+nohup bash scripts/image.sh 2 2,3 4 1000 2 50000 hylora all no gen 1e-3 5 base NQ train > logs/hylora_all_notrain_gen_lr1e-3_base_5.log 2>&1 &
+
+# test 
+# bash scripts/image.sh 2 3,4 4 1000 64 50000 hylora kl no gen 1e-3 5 base NQ test

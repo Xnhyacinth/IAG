@@ -9,7 +9,7 @@ from torch import nn
 import torch
 import transformers
 from model.model import FiDT5, T5LoraWrapper
-from peft import LoraConfig, get_peft_model, prepare_model_for_int8_training, TaskType
+from peft import LoraConfig, get_peft_model, prepare_model_for_int8_training, TaskType, PeftConfig, PeftModel
 import torch.nn.functional as F
 import math
 from model.losses import *
@@ -23,7 +23,8 @@ class ImageModel(nn.Module):
         model = transformers.AutoModelForSeq2SeqLM.from_pretrained(
             pre_train_dir
         )
-        self.encoder = model.encoder
+        if 'test' not in args.name:
+            self.encoder = model.encoder
         self.model = FiDT5(model.config)
         self.model.load_t5(model.state_dict())
         if args.lora:
@@ -38,10 +39,8 @@ class ImageModel(nn.Module):
             )
             # add LoRA adaptor
             self.model = get_peft_model(self.model, lora_config)
-            # self.model.set_checkpoint(args.use_checkpoint)
         elif args.hylora:
             self.model = T5LoraWrapper(self.model, args.lora_rank, args.hidden_adapter_dim, args.load_hypernet_weights)
-            # self.model.model.set_checkpoint(args.use_checkpoint)
         
     def forward(self, input_ids, attention_mask, labels, features=None, **kwargs):
         output = self.model(input_ids=input_ids,
@@ -60,6 +59,8 @@ class ImageLitModel(pl.LightningModule):
     def add_model_specific_args(parent_args):
         parser = parent_args.add_argument_group('BaseModel')
         parser.add_argument("--model_name", type=str, default="t5-base")
+        parser.add_argument("--model_path", type=str, default=None)
+        parser.add_argument("--peft_model_id", type=str, default=None)
         parser.add_argument('--load_checkpoints_path',
                                   default='', type=str)
         # parser.add_argument("--warmup_steps", type=int, default=1000)
@@ -108,8 +109,12 @@ class ImageLitModel(pl.LightningModule):
         self.args = args
         self.num_data = 100
         self.model = ImageModel(args, model_path)
-        self.encoder = self.model.encoder
         self.tokenizer = tokenizer
+        self.best_em = 0.0
+        if args.do_distill:
+            self.load_teacher(args)
+        if 'test' not in args.name:
+            self.encoder = self.model.encoder
 
     def load_teacher(self, args):
         self.t_model = FiDT5.from_pretrained(args.teacher_model)
@@ -139,8 +144,6 @@ class ImageLitModel(pl.LightningModule):
                 self.total_step = self.args.max_steps
             del self.model.encoder
             print('Total training step:', self.total_step)
-            if self.args.do_distill:
-                self.load_teacher(self.args)
 
     # kd loss
     def cal_loss(self, s_logits, t_logits, temperature):
@@ -402,6 +405,17 @@ class ImageLitModel(pl.LightningModule):
         with open(self.args.output_dir / 'logging.txt', 'a+') as f:
             f.write(log)
             f.close()
+        
+        # save
+        if em > self.best_em:
+            self.save()
+
+    def save(self):
+        model_to_save = self.model.module if hasattr(self.model, "module") else self.model
+        if hasattr(model_to_save, "hypernet"):
+            torch.save(model_to_save.hypernet.state_dict(), f"{self.args.save_ckpt_path}/best/hypernet.pth")
+        
+        pass
 
     def test_epoch_end(self, test_step_outputs):
          # compute metrics

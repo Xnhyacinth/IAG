@@ -83,9 +83,10 @@ name="${name}_${gold}_lr${lr}_${size}"
 file=main.py
 if [ "$train" = "test" ];then
   file=test.py
-  load_checkpoints_path="output/hylora_kl_hg_ctxs5_gen_lr1e-3_base/ckpt/last.ckpt"
+  load_checkpoints_path="output/lora_kl/ckpt/epoch=15-step=39110-val_em=21.24.ckpt"
   default_root_dir='output_test'
   name="${name}_test"
+  extra_args="$extra_args --load_checkpoints_path $load_checkpoints_path"
 fi
 extra_args="$extra_args --name $name" # --resume_from_checkpoint output/hylora_all_lr1e-3/ckpt/last.ckpt
 echo "name: ${name}"
