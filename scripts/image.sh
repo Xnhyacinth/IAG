@@ -83,7 +83,7 @@ name="${name}_${gold}_lr${lr}_${size}"
 file=main.py
 if [ "$train" = "test" ];then
   file=test.py
-  load_checkpoints_path="output/hylora_kl_gold_lr1e-3/ckpt/epoch=4-step=48584-val_em=36.32.ckpt"
+  load_checkpoints_path="output/hylora_kl_hg_ctxs5_gen_lr1e-3_base/ckpt/last.ckpt"
   default_root_dir='output_test'
   name="${name}_test"
 fi

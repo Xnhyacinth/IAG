@@ -253,7 +253,7 @@ class MInterface(pl.LightningModule):
     
     def load_from_checkpoint(self, checkpoint_path=None):
         if checkpoint_path is None:
-            return self.model.load_from_checkpoint(self.trainer.checkpoint_callback.best_model_path)
+            return self.model.load_from_checkpoint(self.trainer.checkpoint_callback.best_model_path, args=self.args, tokenizer=self.tokenizer)
         return self.model.load_from_checkpoint(checkpoint_path)
 
 

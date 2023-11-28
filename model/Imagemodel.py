@@ -234,7 +234,7 @@ class ImageLitModel(pl.LightningModule):
             loss = (
                 self.args.alpha_kd * self.cal_loss(logits, t_logits, self.args.temperature / (1 + math.log(self.global_step // 500 + 1)))
                 + (1 - self.args.alpha_kd) * loss
-            )
+            ) / 2
             # print(loss)
             if self.args.use_kl:
                 p_s = F.log_softmax(logits / 4.0, dim=-1)
@@ -242,24 +242,27 @@ class ImageLitModel(pl.LightningModule):
                 loss += (
                     F.kl_div(p_s, p_t, reduction='batchmean')
                 ) / 100
-
+                # print((
+                #     F.kl_div(p_s, p_t, reduction='batchmean')
+                # ) / 100)
             if self.args.use_attn:
                 attn = outputs[-1]
                 t_attn = teacher_outputs[-1]
-                attn = attn[[0, attn.size(0) // 2, -1]]
-                t_attn = t_attn[[0, t_attn.size(0) // 2, -1]]
+                attn = [attn[0], attn[len(attn) // 2], attn[-1]]
+                t_attn = [t_attn[0], t_attn[len(t_attn) // 2], t_attn[-1]]
                 
                 loss_a = [
                     att_mse_loss(a.repeat(t_a.size(0) // a.size(0), 1, 1, 1), 
                                  t_a,context_mask.view(context_mask.size(0) * context_mask.size(1), -1).repeat(t_a.size(0) // a.size(0), 1))
                     for a, t_a in zip(attn, t_attn)
                 ]
-                loss += sum(loss_a) / len(loss_a) # *5
+                loss += sum(loss_a) / len(loss_a) * 10
+                # print(sum(loss_a) / len(loss_a))
 
                 d_attn = outputs[4]
                 d_t_attn = teacher_outputs[4]
-                d_attn = d_attn[[0, d_attn.size(0) // 2, -1]]
-                d_t_attn = d_t_attn[[0, d_t_attn.size(0) // 2, -1]]
+                d_attn = [d_attn[0], d_attn[len(d_attn) // 2], d_attn[-1]]
+                d_t_attn = [d_t_attn[0], d_t_attn[len(d_t_attn) // 2], d_t_attn[-1]]
                 loss_a = [
                     att_ce_loss(
                         a.repeat(t_a.size(0) // a.size(0), 1, 1, 1),
@@ -270,13 +273,14 @@ class ImageLitModel(pl.LightningModule):
                     )
                     for a, t_a in zip(d_attn, d_t_attn)
                 ]
-                loss += sum(loss_a) / len(loss_a) #/ 10
+                loss += sum(loss_a) / len(loss_a) / 50
+                # print(sum(loss_a) / len(loss_a))
 
             if self.args.use_hidden:
                 hd = outputs[-2]
                 t_hd = teacher_outputs[-2]
-                hd = hd[[0, hd.size(0) // 2, -1]]
-                t_hd = t_hd[[0, t_hd.size(0) // 2, -1]]
+                hd = [hd[0], hd[len(hd) // 2], hd[-1]]
+                t_hd = [t_hd[0], t_hd[len(t_hd) // 2], t_hd[-1]]
 
                 loss_h = [
                     cos_loss(
@@ -288,12 +292,12 @@ class ImageLitModel(pl.LightningModule):
                     )
                     for h, t_h in zip(hd, t_hd)
                 ]
-                loss += sum(loss_h) / len(loss_h)
-                
+                loss += sum(loss_h) / len(loss_h) / 5
+                # print(sum(loss_h) / len(loss_h))
                 d_hd = outputs[3]
                 d_t_hd = teacher_outputs[3]
-                d_hd = d_hd[[0, d_hd.size(0) // 2, -1]]
-                d_t_hd = d_t_hd[[0, d_t_hd.size(0) // 2, -1]]
+                d_hd = [d_hd[0], d_hd[len(d_hd) // 2], d_hd[-1]]
+                d_t_hd = [d_t_hd[0], d_t_hd[len(d_t_hd) // 2], d_t_hd[-1]]
                 loss_h = [
                     cos_loss(
                         h.repeat(context_mask.size(1), 1, 1),
@@ -305,6 +309,7 @@ class ImageLitModel(pl.LightningModule):
                     for h, t_h in zip(d_hd, d_t_hd)
                 ]
                 loss += sum(loss_h) / len(loss_h) #* 10
+                # print(sum(loss_h) / len(loss_h))
         else:
             (idx, labels, _, context_ids, context_mask, _, _, features, _) = batch
             loss = self.model(
