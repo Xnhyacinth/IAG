@@ -22,8 +22,8 @@ def main(opt):
     opt.logging_dir = checkpoint_path / 'logs'
     opt.save_ckpt_path = checkpoint_path / 'ckpt'
     opt.load_ckpt_path = checkpoint_path / 'ckpt'
-    if os.path.exists(opt.output_dir):
-        opt.load_checkpoints_path = f'output/hylora_kl_gold_hg_ctxs1_lr1e-3_large/ckpt/last.ckpt'# opt.save_ckpt_path / 'last.ckpt'
+    if os.path.exists(opt.save_ckpt_path / 'last.ckpt'):
+        opt.load_checkpoints_path = opt.save_ckpt_path / 'last.ckpt'
     with open(checkpoint_path / 'options.txt', 'w') as o:
         for k, v in sorted(opt.__dict__.items(), key=lambda x: x[0]):
             o.write(f'{k} = {v}\n')

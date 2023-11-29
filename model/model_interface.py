@@ -213,7 +213,8 @@ class MInterface(pl.LightningModule):
             # self.data_model = ImageDataModel(
             #     dataset['train'], dataset['eval'], dataset['test'], self.tokenizer, self.args)
             self.model.num_data = len(train_data)
-        del self.model.encoder
+        if self.args.load_checkpoints_path == "":
+            del self.model.encoder
         self.trainer.fit(self.model, self.data_model)
 
     def test(self, model=None, data=None):

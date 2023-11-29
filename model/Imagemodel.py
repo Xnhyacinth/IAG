@@ -166,7 +166,8 @@ class ImageLitModel(pl.LightningModule):
                                       (max(1, int(self.args.devices)) * self.trainer.accumulate_grad_batches))
             else:
                 self.total_step = self.args.max_steps
-            del self.model.encoder
+            if self.args.load_checkpoints_path == "":
+                del self.model.encoder
             print('Total training step:', self.total_step)
 
     # kd loss

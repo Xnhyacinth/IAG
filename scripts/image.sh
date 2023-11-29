@@ -108,7 +108,7 @@ deepspeed --include localhost:$gpus --master_port $MASTER_PORT ${file} \
         --answer_maxlength 256 \
         --context_maxlength ${context_maxlength} \
         --val_check_interval ${val_check_interval} \
-        --num_workers 5 \
+        --num_workers 3 \
         --default_root_dir ${default_root_dir} \
         --n_context 100 \
         --warmup_ratio 0.08 \
