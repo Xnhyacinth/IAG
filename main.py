@@ -44,8 +44,8 @@ def main(opt):
     model.trainer.checkpoint_callback.best_model_path
     model.test()
     # Save our LoRA model & tokenizer results
-    model_id=f"{opt.save_ckpt_path}/results"
-    model.save(model_id)
+    # model_id=f"{opt.save_ckpt_path}/results"
+    # model.save(model_id)
 
 if __name__ == "__main__":
     total_parser = ArgumentParser("Image")

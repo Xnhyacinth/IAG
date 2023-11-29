@@ -405,17 +405,6 @@ class ImageLitModel(pl.LightningModule):
         with open(self.args.output_dir / 'logging.txt', 'a+') as f:
             f.write(log)
             f.close()
-        
-        # save
-        if em > self.best_em:
-            self.save()
-
-    def save(self):
-        model_to_save = self.model.module if hasattr(self.model, "module") else self.model
-        if hasattr(model_to_save, "hypernet"):
-            torch.save(model_to_save.hypernet.state_dict(), f"{self.args.save_ckpt_path}/best/hypernet.pth")
-        
-        pass
 
     def test_epoch_end(self, test_step_outputs):
          # compute metrics
