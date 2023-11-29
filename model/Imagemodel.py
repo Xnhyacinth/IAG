@@ -24,7 +24,7 @@ class ImageModel(nn.Module):
         model = transformers.AutoModelForSeq2SeqLM.from_pretrained(
             pre_train_dir
         )
-        if 'test' not in args.name and args.load_checkpoints_path != "":
+        if 'test' not in args.name and args.load_checkpoints_path == "":
             self.encoder = model.encoder
         self.model = FiDT5(model.config)
         self.model.load_t5(model.state_dict())
@@ -135,7 +135,7 @@ class ImageLitModel(pl.LightningModule):
         self.best_em = 0.0
         if args.do_distill:
             self.load_teacher(args)
-        if 'test' not in args.name and args.load_checkpoints_path != "":
+        if 'test' not in args.name and args.load_checkpoints_path == "":
             self.encoder = self.model.encoder
 
     def load_teacher(self, args):
