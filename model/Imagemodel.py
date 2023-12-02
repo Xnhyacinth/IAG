@@ -98,8 +98,7 @@ class ImageLitModel(pl.LightningModule):
         # parser.add_argument("--save_strategy", type=str, default="steps", help="strategy of save model")
 
         # kd setting
-        parser.add_argument(
-            "--use_lgtm", action="store_true", help="Use LGTM or not")
+        parser.add_argument("--use_lgtm", action="store_true", help="Use LGTM or not")
         parser.add_argument("--alpha_kd", type=float,
                             default=1.0, help="The weight of kd loss")
         parser.add_argument("--temperature", type=float,

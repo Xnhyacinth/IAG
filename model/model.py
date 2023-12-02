@@ -327,7 +327,7 @@ class HyperLora(nn.Module):
 class HyperNet(nn.Module):
     def __init__(self, encoding_dim, input_dim, embedding_dim):
         super(HyperNet, self).__init__()
-        self.output_dim = 768
+        self.output_dim = input_dim
         self.hidden_dim = 8
         self.pre_down_linear = nn.Linear(encoding_dim+1, self.hidden_dim)
         self.pre_down_linear.weight, self.pre_down_linear.bias = self.init_layer(self.pre_down_linear)

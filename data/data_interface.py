@@ -181,8 +181,11 @@ class ImageDataModel(pl.LightningDataModule):
         passage_ids, passage_masks = encode_passages(text_passages,
                                                      self.tokenizer,
                                                      self.args.text_maxlength)
+        
         if self.args.cbqa or self.args.gold:
             context = [append_question(example, self.args.gold, self.args.cbqa) for example in batch]
+        elif "fid" in self.args.name:
+            context = text_passages
         else:
             context = [[ex['question'] + "\n" + ex['context']] for ex in batch]
         context_ids, context_masks = encode_passages(context,
