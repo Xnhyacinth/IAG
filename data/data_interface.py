@@ -66,7 +66,7 @@ class ImageDataset(Dataset):
             'question': question,
             'target': target,
             'passages': passages,
-            'context': example['context']['compressed_prompt'],
+            'context': example['context']['compressed_prompt'][194:],
             'features': example['features'],
             'answers': example['answers']
         }
