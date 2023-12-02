@@ -20,8 +20,8 @@ def main(opt):
     checkpoint_path.mkdir(parents=True, exist_ok=True)
     opt.output_dir = checkpoint_path
     opt.logging_dir = checkpoint_path / 'logs'
-    opt.save_ckpt_path = checkpoint_path / 'ckpt'
-    opt.load_ckpt_path = checkpoint_path / 'ckpt'
+    opt.save_ckpt_path = 'data2/huanxuan/pl' / checkpoint_path / 'ckpt'
+    opt.load_ckpt_path = 'data2/huanxuan/pl' / checkpoint_path / 'ckpt'
     if os.path.exists(opt.save_ckpt_path / 'last.ckpt'):
         opt.load_checkpoints_path = opt.save_ckpt_path / 'last.ckpt'
     with open(checkpoint_path / 'options.txt', 'w') as o:

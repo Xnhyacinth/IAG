@@ -49,6 +49,11 @@ if [ "$distill" = "kl" ];then
   extra_args="$extra_args --use_kl --do_distill"
   name="${name}_kl"
 fi
+if [ "$distill" = "hd" ];then
+  extra_args="$extra_args --do_distill --use_attn --use_hidden"
+  name="${name}_hd"
+  context_maxlength=256
+fi
 if [ "$distill" = "all" ];then
   extra_args="$extra_args --use_kl --do_distill --use_attn --use_hidden"
   name="${name}_all"
@@ -115,7 +120,7 @@ deepspeed --include localhost:$gpus --master_port $MASTER_PORT ${file} \
         --train_data data/NQ/train.json \
         --eval_data data/NQ/dev.json \
         --test_data data/NQ/test.json \
-        --model_name t5-base \
+        --model_name t5-${size} \
         --teacher_model ${teacher_model} \
         --t_learning_rate 5e-05 \
         --alpha_kd 0.6 \

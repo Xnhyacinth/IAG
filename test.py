@@ -9,6 +9,7 @@ from pathlib import Path
 from copy import deepcopy
 import torch
 import os
+import transformers
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 os.environ['CURL_CA_BUNDLE'] = ''
 
@@ -37,3 +38,4 @@ if __name__ == "__main__":
     args = total_parser.parse_args()
     
     main(args)
+    
