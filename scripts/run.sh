@@ -3,6 +3,9 @@
 # hylora_all_base
 # nohup bash scripts/image.sh 2 5,6 4 1000 2 50000 hylora all no gen 1e-3 100 base NQ train > logs/hylora_all_notrain_gen_lr1e-3_base.log 2>&1 &
 
+# hylora_hd_base_5
+nohup bash scripts/image.sh 2 2,3 4 1000 2 50000 hylora hd no gen 1e-3 10 base NQ > logs/hylora_hd_notrain_gen_lr1e-3_base_10.log 2>&1 &
+
 # hylora_kl_large
 # nohup bash scripts/image.sh 2 0,1 4 1000 2 50000 hylora kl no gold 1e-3 1 large NQ train > logs/hylora_kl_notrain_gold_lr1e-3_large.log 2>&1 &
 
