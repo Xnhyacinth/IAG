@@ -1,7 +1,7 @@
 
 
 d='test'
-dataset='NQ'
+dataset='TQA'
 datapath='/home/huanxuan/FiD/compress_data'
 num=10
 cuda=3
