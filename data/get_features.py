@@ -103,9 +103,9 @@ model_path_simcse_roberta = "t5-base"
 tokenizer = AutoTokenizer.from_pretrained(model_path_simcse_roberta)
 # model = Simcsewrap(model_path_simcse_roberta, 255).cuda()
 model = AutoModel.from_pretrained(model_path_simcse_roberta).to(f'cuda:0')
-new_data = []
 # for d in tqdm(data, desc='Length'):
 for split in ["train", "eval", "test"]:
+    new_data = []
     data = dataset[split]
     questions = data["question"]
     context = data[f"compressed_ctxs_{opt.num}"]
