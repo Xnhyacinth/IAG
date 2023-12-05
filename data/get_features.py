@@ -108,10 +108,9 @@ for split in ["train", "eval", "test"]:
     data = dataset[split]
     questions = data["question"]
     context = data[f"compressed_ctxs_{opt.num}"]
-    for d in tqdm(range(0, len(data), 1024), desc='Length'):
+    for d in tqdm(range(0, len(data), 256), desc='Length'):
         # qs = ['Question: ' + item['question'] + '\nAnswer:' for item in data[d:d+1024]]
-        for qss, css in zip(questions[d:d+1024], context[d:d+1024]):
-            qs = ['Question: ' + q + " " + c + '\nAnswer:' for q, c in zip(qss, css)]
+        qs = ['Question: ' + q + " " + c["compressed_prompt"][194:] + '\nAnswer:' for (q, c) in zip(questions[d:d+256], context[d:d+256])]
         # inputs = tokenizer(d['question'], return_tensors='pt', padding=True).to('cuda:0')
         inputs = tokenizer(qs, #d['question']
                             max_length=512,
@@ -128,7 +127,6 @@ for split in ["train", "eval", "test"]:
         # d['features'] = embeddings.cpu().numpy().tolist()
         # new_d = {}
         # new_d['features'] = pooled_sentence
-        # print(pooled_sentence.shape)
         for i in range(pooled_sentence.shape[0]):
             new_d = {}
             new_d['features'] = pooled_sentence[i].tolist()

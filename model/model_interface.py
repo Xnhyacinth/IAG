@@ -62,6 +62,7 @@ class MInterface(pl.LightningModule):
 
         # total_parser.add_argument("--load_best_model_at_end", action="store_true", default=True)
         total_parser.add_argument("--use_checkpoint", action="store_true")
+        total_parser.add_argument("--use_context", action="store_true")
         total_parser.add_argument(
             "--local_rank", type=int, default=-1, help="For distributed training: local_rank")
         total_parser.add_argument(
@@ -166,6 +167,8 @@ class MInterface(pl.LightningModule):
             data_path = 'features/NQ'
         else:
             data_path = 'features/TQA'
+        if self.args.use_context:
+            data_path = f"{data_path}/context-{self.args.n_c}"
         dataset_features = load_dataset("json", data_files={
                                         'train': f'{data_path}/train.json', 'eval': f'{data_path}/eval.json', 'test': f'{data_path}/test.json'})
         if 'test' not in self.args.name:
