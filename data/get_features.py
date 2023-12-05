@@ -13,6 +13,7 @@ from pathlib import Path
 from tqdm import tqdm
 from data import load_data
 import numpy as np
+from datasets import load_from_disk
 
 def load_data_compress(data_path=None, global_rank=-1, world_size=-1):
     assert data_path
@@ -91,43 +92,51 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--datapath", type=str, default='data')
 parser.add_argument("--dataset", type=str, default='TQA')
 parser.add_argument("--d", type=str, default='train')
+parser.add_argument("--num", type=int, default=5)
 opt = parser.parse_args()
-checkpoint_path = Path(f"features/{opt.dataset}/{opt.d}")
+checkpoint_path = Path(f"features/{opt.dataset}/context-{opt.num}")
 checkpoint_path.mkdir(parents=True, exist_ok=True)
-data = load_data_compress(f"{opt.datapath}/{opt.dataset}/{opt.d}.json")
+# data = load_data_compress(f"{opt.datapath}/{opt.dataset}/{opt.d}.json")
+dataset = load_from_disk(f'dataset/Image/{opt.dataset}')
 model_path_simcse_roberta = "t5-base"
 tokenizer = AutoTokenizer.from_pretrained(model_path_simcse_roberta)
 # model = Simcsewrap(model_path_simcse_roberta, 255).cuda()
 model = AutoModel.from_pretrained(model_path_simcse_roberta).to('cuda:0')
 new_data = []
 # for d in tqdm(data, desc='Length'):
-for d in tqdm(range(0, len(data), 1024), desc='Length'):
-    qs = ['Question: ' + item['question'] + '\nAnswer:' for item in data[d:d+1024]]
-    # inputs = tokenizer(d['question'], return_tensors='pt', padding=True).to('cuda:0')
-    inputs = tokenizer(qs, #d['question']
-                        max_length=64,
-                        padding='max_length',
-                        truncation='longest_first',
-                        return_tensors="pt").to('cuda:0')
-    with torch.no_grad():
-        embeddings = model.encoder(input_ids=inputs['input_ids'], attention_mask=inputs['attention_mask'], return_dict=True)
-    pooled_sentence = embeddings.last_hidden_state # shape is [batch_size, seq_len, hidden_size]
-    pooled_sentence = np.array(torch.mean(pooled_sentence, dim=1).cpu().detach().numpy())
-    # print(pooled_sentence)
-    kernel, bias = compute_kernel_bias(pooled_sentence, 255)
-    pooled_sentence = transform_and_normalize(pooled_sentence, kernel=kernel, bias=bias)
-    # d['features'] = embeddings.cpu().numpy().tolist()
-    # new_d = {}
-    # new_d['features'] = pooled_sentence
-    # print(pooled_sentence.shape)
-    for i in range(pooled_sentence.shape[0]):
-        new_d = {}
-        new_d['features'] = pooled_sentence[i].tolist()
-        new_data.append(new_d)
-    # new_data.append(new_d)
-print(len(new_data))
-with open(f"{checkpoint_path}.json", "w") as f:
-    json.dump(new_data, f, indent=4)
+for split in ["train", "eval", "test"]:
+    data = dataset[split]
+    questions = data["question"]
+    context = data[f"compressed_ctxs_{opt.num}"]
+    for d in tqdm(range(0, len(data), 1024), desc='Length'):
+        # qs = ['Question: ' + item['question'] + '\nAnswer:' for item in data[d:d+1024]]
+        for qss, css in zip(questions[d:d+1024], context[d:d+1024]):
+            qs = ['Question: ' + q + " " + c + '\nAnswer:' for q, c in zip(qss, css)]
+        # inputs = tokenizer(d['question'], return_tensors='pt', padding=True).to('cuda:0')
+        inputs = tokenizer(qs, #d['question']
+                            max_length=512,
+                            padding='max_length',
+                            truncation='longest_first',
+                            return_tensors="pt").to('cuda:0')
+        with torch.no_grad():
+            embeddings = model.encoder(input_ids=inputs['input_ids'], attention_mask=inputs['attention_mask'], return_dict=True)
+        pooled_sentence = embeddings.last_hidden_state # shape is [batch_size, seq_len, hidden_size]
+        pooled_sentence = np.array(torch.mean(pooled_sentence, dim=1).cpu().detach().numpy())
+        # print(pooled_sentence)
+        kernel, bias = compute_kernel_bias(pooled_sentence, 255)
+        pooled_sentence = transform_and_normalize(pooled_sentence, kernel=kernel, bias=bias)
+        # d['features'] = embeddings.cpu().numpy().tolist()
+        # new_d = {}
+        # new_d['features'] = pooled_sentence
+        # print(pooled_sentence.shape)
+        for i in range(pooled_sentence.shape[0]):
+            new_d = {}
+            new_d['features'] = pooled_sentence[i].tolist()
+            new_data.append(new_d)
+        # new_data.append(new_d)
+    print(len(new_data))
+    with open(f"{checkpoint_path}/{split}.json", "w") as f:
+        json.dump(new_data, f, indent=4)
 # da = "dev"
 # data0 = load_data(f"/home/huanxuan/FiD/open_domain_data/NQ/{da}.json")
 # data = load_data_compress(f"/home/huanxuan/FiD/pl/data/NQ/{da}/{da}.json")
