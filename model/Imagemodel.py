@@ -91,14 +91,16 @@ class ImageLitModel(pl.LightningModule):
                             help='Path to hypernet weights, otherwise random init')
         parser.add_argument(
             '--do_distill', action='store_true', help='distill or not')
-
+        parser.add_argument(
+            '--select', action='store_true', help='select layers for distill or not')
         # training parameters
         # parser.add_argument("--eval_steps", type=int, default=500, help="evaluate model every <eval_freq> steps during training")
         # parser.add_argument("--save_freq", type=int, default=5000, help="save model every <save_freq> steps during training")
         # parser.add_argument("--save_strategy", type=str, default="steps", help="strategy of save model")
 
         # kd setting
-        parser.add_argument("--use_lgtm", action="store_true", help="Use LGTM or not")
+        parser.add_argument(
+            "--use_lgtm", action="store_true", help="Use LGTM or not")
         parser.add_argument("--alpha_kd", type=float,
                             default=1.0, help="The weight of kd loss")
         parser.add_argument("--temperature", type=float,
@@ -282,8 +284,9 @@ class ImageLitModel(pl.LightningModule):
             if self.args.use_attn:
                 attn = outputs[-1]
                 t_attn = teacher_outputs[-1]
-                attn = [attn[0], attn[len(attn) // 2], attn[-1]]
-                t_attn = [t_attn[0], t_attn[len(t_attn) // 2], t_attn[-1]]
+                if self.args.select:
+                    attn = [attn[0], attn[len(attn) // 2], attn[-1]]
+                    t_attn = [t_attn[0], t_attn[len(t_attn) // 2], t_attn[-1]]
 
                 loss_a = [
                     att_mse_loss(a.repeat(t_a.size(0) // a.size(0), 1, 1, 1),
@@ -295,9 +298,10 @@ class ImageLitModel(pl.LightningModule):
 
                 d_attn = outputs[4]
                 d_t_attn = teacher_outputs[4]
-                d_attn = [d_attn[0], d_attn[len(d_attn) // 2], d_attn[-1]]
-                d_t_attn = [d_t_attn[0],
-                            d_t_attn[len(d_t_attn) // 2], d_t_attn[-1]]
+                if self.args.select:
+                    d_attn = [d_attn[0], d_attn[len(d_attn) // 2], d_attn[-1]]
+                    d_t_attn = [d_t_attn[0],
+                                d_t_attn[len(d_t_attn) // 2], d_t_attn[-1]]
                 loss_a = [
                     att_ce_loss(
                         a.repeat(t_a.size(0) // a.size(0), 1, 1, 1),
@@ -314,8 +318,9 @@ class ImageLitModel(pl.LightningModule):
             if self.args.use_hidden:
                 hd = outputs[-2]
                 t_hd = teacher_outputs[-2]
-                hd = [hd[0], hd[len(hd) // 2], hd[-1]]
-                t_hd = [t_hd[0], t_hd[len(t_hd) // 2], t_hd[-1]]
+                if self.args.select:
+                    hd = [hd[0], hd[len(hd) // 2], hd[-1]]
+                    t_hd = [t_hd[0], t_hd[len(t_hd) // 2], t_hd[-1]]
 
                 loss_h = [
                     cos_loss(
@@ -331,8 +336,9 @@ class ImageLitModel(pl.LightningModule):
                 # print(sum(loss_h) / len(loss_h))
                 d_hd = outputs[3]
                 d_t_hd = teacher_outputs[3]
-                d_hd = [d_hd[0], d_hd[len(d_hd) // 2], d_hd[-1]]
-                d_t_hd = [d_t_hd[0], d_t_hd[len(d_t_hd) // 2], d_t_hd[-1]]
+                if self.args.select:
+                    d_hd = [d_hd[0], d_hd[len(d_hd) // 2], d_hd[-1]]
+                    d_t_hd = [d_t_hd[0], d_t_hd[len(d_t_hd) // 2], d_t_hd[-1]]
                 loss_h = [
                     cos_loss(
                         h.repeat(context_mask.size(1), 1, 1),
