@@ -27,6 +27,7 @@ size=${13:-"base"}
 dataset=${14:-"NQ"}
 train=${15:-"train"}
 select=${16:-"all"}
+use_context=${17:-"no"}
 default_root_dir="output"
 teacher_model="pretrained_models/nq_reader_$size"
 echo "batch_size: ${batch_size}"
@@ -99,6 +100,10 @@ if [ "$train" = "test" ];then
 fi
 if [ "$select" = "select" ];then
   extra_args="$extra_args --select"
+fi
+if [ "$use_context" = "use_context" ];then
+  extra_args="$extra_args --use_context"
+  name="${name}_usecontext"
 fi
 name="${name}_${select}layers"
 extra_args="$extra_args --name $name" # --resume_from_checkpoint output/hylora_all_lr1e-3/ckpt/last.ckpt
