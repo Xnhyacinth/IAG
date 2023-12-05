@@ -93,6 +93,7 @@ parser.add_argument("--datapath", type=str, default='data')
 parser.add_argument("--dataset", type=str, default='TQA')
 parser.add_argument("--d", type=str, default='train')
 parser.add_argument("--num", type=int, default=5)
+parser.add_argument("--cuda", type=int, default=0)
 opt = parser.parse_args()
 checkpoint_path = Path(f"features/{opt.dataset}/context-{opt.num}")
 checkpoint_path.mkdir(parents=True, exist_ok=True)
@@ -101,7 +102,7 @@ dataset = load_from_disk(f'dataset/Image/{opt.dataset}')
 model_path_simcse_roberta = "t5-base"
 tokenizer = AutoTokenizer.from_pretrained(model_path_simcse_roberta)
 # model = Simcsewrap(model_path_simcse_roberta, 255).cuda()
-model = AutoModel.from_pretrained(model_path_simcse_roberta).to('cuda:0')
+model = AutoModel.from_pretrained(model_path_simcse_roberta).to(f'cuda:0')
 new_data = []
 # for d in tqdm(data, desc='Length'):
 for split in ["train", "eval", "test"]:
@@ -116,7 +117,7 @@ for split in ["train", "eval", "test"]:
                             max_length=512,
                             padding='max_length',
                             truncation='longest_first',
-                            return_tensors="pt").to('cuda:0')
+                            return_tensors="pt").to(f'cuda:0')
         with torch.no_grad():
             embeddings = model.encoder(input_ids=inputs['input_ids'], attention_mask=inputs['attention_mask'], return_dict=True)
         pooled_sentence = embeddings.last_hidden_state # shape is [batch_size, seq_len, hidden_size]
