@@ -99,10 +99,10 @@ checkpoint_path = Path(f"features/{opt.dataset}/context-{opt.num}")
 checkpoint_path.mkdir(parents=True, exist_ok=True)
 # data = load_data_compress(f"{opt.datapath}/{opt.dataset}/{opt.d}.json")
 dataset = load_from_disk(f'dataset/Image/{opt.dataset}')
-model_path_simcse_roberta = "t5-base"
-tokenizer = AutoTokenizer.from_pretrained(model_path_simcse_roberta)
+model_path = "t5-base"
+tokenizer = AutoTokenizer.from_pretrained(model_path)
 # model = Simcsewrap(model_path_simcse_roberta, 255).cuda()
-model = AutoModel.from_pretrained(model_path_simcse_roberta).to(f'cuda:0')
+model = AutoModel.from_pretrained(model_path).to(f'cuda:0')
 # for d in tqdm(data, desc='Length'):
 for split in ["train", "eval", "test"]:
     new_data = []
