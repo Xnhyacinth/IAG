@@ -106,7 +106,7 @@ if [ "$use_context" = "use_context" ];then
   extra_args="$extra_args --use_context"
   name="${name}_usecontext"
 fi
-name="${name}_${select}layers"
+name="${name}_${select}layers_${n_context}"
 extra_args="$extra_args --name $name" # --resume_from_checkpoint output/hylora_all_lr1e-3/ckpt/last.ckpt
 echo "name: ${name}"
 echo "default_root_dir: ${default_root_dir}"
