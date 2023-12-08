@@ -1,10 +1,10 @@
 
 
-d='test'
+d='train'
 dataset='TQA'
 datapath='/home/huanxuan/FiD/compress_data'
-num=10
-cuda=3
+num=20
+cuda=7
 export CUDA_VISIBLE_DEVICES=${cuda}
 nohup python -u data/get_features.py --dataset ${dataset} --d ${d} --datapath ${datapath} --num ${num} --cuda ${cuda} > logs/data/${dataset}/${d}_${num}.log 2>&1 &
 # for d in train test dev
