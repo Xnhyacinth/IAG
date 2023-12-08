@@ -28,6 +28,7 @@ dataset=${14:-"NQ"}
 train=${15:-"train"}
 select=${16:-"all"}
 use_context=${17:-"no"}
+n_context=${18:-"100"}
 default_root_dir="output"
 teacher_model="pretrained_models/nq_reader_$size"
 echo "batch_size: ${batch_size}"
@@ -128,7 +129,7 @@ deepspeed --include localhost:$gpus --master_port $MASTER_PORT ${file} \
         --val_check_interval ${val_check_interval} \
         --num_workers 5 \
         --default_root_dir ${default_root_dir} \
-        --n_context 100 \
+        --n_context ${n_context} \
         --warmup_ratio 0.08 \
         --train_data data/NQ/train.json \
         --eval_data data/NQ/dev.json \
