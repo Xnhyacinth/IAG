@@ -1,7 +1,7 @@
 
 
-d='train'
-dataset='TQA'
+d='test'
+dataset='NQ'
 datapath='/home/huanxuan/FiD/compress_data'
 num=20
 cuda=7
