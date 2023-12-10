@@ -171,6 +171,8 @@ class MInterface(pl.LightningModule):
             data_path = 'features/TQA'
         if self.args.use_context:
             data_path = f"{data_path}/context-{self.args.n_c}"
+        else:
+            data_path = f"{data_path}/context-0"
         print(f"load data_features from {data_path}")
         dataset_features = load_dataset("json", data_files={
                                         'train': f'{data_path}/train.json', 'eval': f'{data_path}/eval.json', 'test': f'{data_path}/test.json'})
