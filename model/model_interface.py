@@ -165,6 +165,8 @@ class MInterface(pl.LightningModule):
     def load_features(self, dataset, hg_datapath):
         if 'NQ' in hg_datapath:
             data_path = 'features/NQ'
+        elif 'WQ' in hg_datapath:
+            data_path = 'features/WQ'
         else:
             data_path = 'features/TQA'
         if self.args.use_context:
@@ -186,12 +188,13 @@ class MInterface(pl.LightningModule):
                 f.write(
                     f'load data from {self.args.hg_datapath}, use compressed_ctxs_{self.args.n_c}\n')
             # dataset = load_dataset(self.args.hg_datapath)
+            dataset = load_from_disk(self.args.hg_datapath)
             if 'TQA' in self.args.hg_datapath:
-                dataset = load_from_disk('dataset/Image/TQA')
+                # dataset = load_from_disk('dataset/Image/TQA')
                 dataset = dataset.select_columns(
                     ['id', 'question', 'answers', 'target', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
             else:
-                dataset = load_from_disk('dataset/Image/NQ')
+                # dataset = load_from_disk('dataset/Image/NQ')
                 dataset = dataset.select_columns(
                     ['id', 'question', 'answers', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
             # dataset['train'] = dataset['train'].select(range(1456))

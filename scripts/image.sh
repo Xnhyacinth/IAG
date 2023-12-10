@@ -80,11 +80,16 @@ if [ "$size" = "large" ];then
   hidden_adapter_dim=1024
 fi
 if [ "$n_c" != "0" ];then
-  hg_datapath="Xnhyacinth/Image/NQ"
+  hg_datapath="dataset/Image/NQ"
   if [ "$dataset" == "TQA" ];then
-    hg_datapath="Xnhyacinth/Image/TQA"
+    hg_datapath="dataset/Image/TQA"
     teacher_model="pretrained_models/tqa_reader_$size"
     default_root_dir="output_tqa"
+  fi
+  if [ "$dataset" == "WQ" ];then
+    hg_datapath="dataset/Image/WQ"
+    teacher_model="pretrained_models/wq_reader_$size"
+    default_root_dir="output_wq"
   fi
   extra_args="$extra_args --hg_datapath ${hg_datapath} --n_c ${n_c}"
   name="${name}_hg_ctxs${n_c}"

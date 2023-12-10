@@ -92,7 +92,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--datapath", type=str, default='data')
 parser.add_argument("--dataset", type=str, default='TQA')
 parser.add_argument("--d", type=str, default='train')
-parser.add_argument("--num", type=int, default=5)
+parser.add_argument("--num", type=int, default=0)
 parser.add_argument("--cuda", type=int, default=0)
 opt = parser.parse_args()
 checkpoint_path = Path(f"features/{opt.dataset}/context-{opt.num}")
@@ -108,10 +108,18 @@ for split in ["train", "eval", "test"]:
     new_data = []
     data = dataset[split]
     questions = data["question"]
-    context = data[f"compressed_ctxs_{opt.num}"]
+    if opt.num > 1:
+        context = data[f"compressed_ctxs_{opt.num}"]
+    if opt.num == 1:
+        context = data["ctxs"]
     for d in tqdm(range(0, len(data), 256), desc='Length'):
-        # qs = ['Question: ' + item['question'] + '\nAnswer:' for item in data[d:d+1024]]
-        qs = ['Question: ' + q + " " + c["compressed_prompt"][194:] + '\nAnswer:' for (q, c) in zip(questions[d:d+256], context[d:d+256])]
+        if opt.num == 0:
+            qs = ['Question: ' + item + '\nAnswer:' for item in questions[d:d+256]]
+        elif opt.num == 1:
+            f = 'title:' + " {} " + 'context:' + " {}"
+            qs = ['Question: ' + q + " " + f.format(c[0]['title'], c[0]['text']) + '\nAnswer:' for (q, c) in zip(questions[d:d+256], context[d:d+256])]
+        else:
+            qs = ['Question: ' + q + " " + c["compressed_prompt"][194:] + '\nAnswer:' for (q, c) in zip(questions[d:d+256], context[d:d+256])]
         # inputs = tokenizer(d['question'], return_tensors='pt', padding=True).to('cuda:0')
         inputs = tokenizer(qs, #d['question']
                             max_length=512,

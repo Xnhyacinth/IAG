@@ -1,9 +1,9 @@
 
 
 d='test'
-dataset='NQ'
+dataset='WQ'
 datapath='/home/huanxuan/FiD/compress_data'
-num=20
+num=1
 cuda=7
 export CUDA_VISIBLE_DEVICES=${cuda}
 nohup python -u data/get_features.py --dataset ${dataset} --d ${d} --datapath ${datapath} --num ${num} --cuda ${cuda} > logs/data/${dataset}/${d}_${num}.log 2>&1 &
