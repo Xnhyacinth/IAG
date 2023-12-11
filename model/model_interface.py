@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import defaultdict
 import inspect
 import torch
 import importlib
@@ -112,7 +113,7 @@ class MInterface(pl.LightningModule):
         elif data_path.endswith('.json'):
             with open(data_path, 'r') as fin:
                 data = json.load(fin)
-        examples = []
+        examples = defaultdict(list)
         for k, example in enumerate(data):
             if data_path is not None and data_path.endswith('.jsonl'):
                 example = json.loads(example)
@@ -122,7 +123,8 @@ class MInterface(pl.LightningModule):
                 example["context"] = example.pop("compressed_prompt")
             except:
                 example["context"] = {"compressed_prompt":[0 * 256]}
-            examples.append(example)
+            for key, val in example.items():
+                examples[key].append(val)
         # egrave: is this needed?
         if data_path is not None and data_path.endswith('.jsonl'):
             data.close()

@@ -29,7 +29,7 @@ train=${15:-"train"}
 select=${16:-"all"}
 use_context=${17:-"no"}
 n_context=${18:-"100"}
-default_root_dir="output"
+default_root_dir="output_${dataset}"
 teacher_model="pretrained_models/nq_reader_$size"
 echo "batch_size: ${batch_size}"
 echo "max_steps: ${max_steps}"
@@ -81,11 +81,9 @@ if [ "$size" = "large" ];then
 fi
 if [ "$dataset" == "TQA" ];then
   teacher_model="pretrained_models/tqa_reader_$size"
-  default_root_dir="output_tqa"
 fi
 if [ "$dataset" == "WQ" ];then
   teacher_model="pretrained_models/wq_reader_$size"
-  default_root_dir="output_wq"
 fi
 hg_datapath="dataset/Image/$dataset"
 extra_args="$extra_args --hg_datapath ${hg_datapath} --n_c ${n_c}"
