@@ -119,10 +119,9 @@ class MInterface(pl.LightningModule):
             if not 'id' in example:
                 example['id'] = k
             try:
-                example["context"] = example.pop("compressed_prompt")[
-                    "compressed_prompt"]
+                example["context"] = example.pop("compressed_prompt")
             except:
-                example["context"] = [0 * 256]
+                example["context"] = {"compressed_prompt":[0 * 256]}
             examples.append(example)
         # egrave: is this needed?
         if data_path is not None and data_path.endswith('.jsonl'):
