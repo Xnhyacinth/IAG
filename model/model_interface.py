@@ -27,7 +27,7 @@ from model.Imagemodel import ImageLitModel
 from data.data_interface import ImageDataModel
 import json
 import numpy as np
-from datasets import load_dataset, load_from_disk, DatasetDict
+from datasets import load_dataset, load_from_disk, DatasetDict, Dataset
 
 
 class MInterface(pl.LightningModule):
@@ -216,9 +216,9 @@ class MInterface(pl.LightningModule):
             #     self.tokenizer, self.args, dataset=dataset)
             # self.model.num_data = len(dataset['train'])
         else:
-            train_data = self.load_data(self.args.train_data)
-            dev_data = self.load_data(self.args.eval_data)
-            test_data = self.load_data(self.args.test_data)
+            train_data = Dataset.frome_dict(self.load_data(self.args.train_data))
+            dev_data = Dataset.frome_dict(self.load_data(self.args.eval_data))
+            test_data = Dataset.frome_dict(self.load_data(self.args.test_data))
             # dataset = load_dataset("json", data_files={'train':self.args.train_data, 'eval':self.args.eval_data, 'test':self.args.test_data})
             dataset = DatasetDict({'train': train_data, 'eval': dev_data, 'test': test_data})
             # self.data_model = ImageDataModel(
