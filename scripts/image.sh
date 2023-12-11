@@ -136,9 +136,9 @@ deepspeed --include localhost:$gpus --master_port $MASTER_PORT ${file} \
         --default_root_dir ${default_root_dir} \
         --n_context ${n_context} \
         --warmup_ratio 0.08 \
-        --train_data data/NQ/train.json \
-        --eval_data data/NQ/dev.json \
-        --test_data data/NQ/test.json \
+        --train_data data/$dataset/train.json \
+        --eval_data data/$dataset/dev.json \
+        --test_data data/$dataset/test.json \
         --model_name t5-${size} \
         --teacher_model ${teacher_model} \
         --t_learning_rate 5e-05 \
