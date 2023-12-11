@@ -26,7 +26,7 @@ from model.Imagemodel import ImageLitModel
 from data.data_interface import ImageDataModel
 import json
 import numpy as np
-from datasets import load_dataset, load_from_disk
+from datasets import load_dataset, load_from_disk, DatasetDict
 
 
 class MInterface(pl.LightningModule):
@@ -187,7 +187,7 @@ class MInterface(pl.LightningModule):
         return dataset
 
     def train(self):
-        if self.args.hg_datapath is not None:
+        if self.args.n_c != 0:
             with open(self.args.output_dir / 'logging.txt', 'a+') as f:
                 f.write(
                     f'load data from {self.args.hg_datapath}, use compressed_ctxs_{self.args.n_c}\n')
@@ -208,22 +208,29 @@ class MInterface(pl.LightningModule):
                 f'compressed_ctxs_{self.args.n_c}', 'context')
             # dataset['context'] = dataset['context']['compressed_prompt']
             # dataset = dataset.map(self.get_features, batched=True, batch_size=2048, desc="Features for Input")
-            dataset = self.load_features(dataset, self.args.hg_datapath)
-            print(dataset)
-            self.data_model = ImageDataModel(
-                self.tokenizer, self.args, dataset=dataset)
-            self.model.num_data = len(dataset['train'])
+            # dataset = self.load_features(dataset, self.args.hg_datapath)
+            # print(dataset)
+            # self.data_model = ImageDataModel(
+            #     self.tokenizer, self.args, dataset=dataset)
+            # self.model.num_data = len(dataset['train'])
         else:
             train_data = self.load_data(self.args.train_data)
             dev_data = self.load_data(self.args.eval_data)
             test_data = self.load_data(self.args.test_data)
-            self.data_model = ImageDataModel(
-                self.tokenizer, self.args, train_data, dev_data, test_data)
+            # dataset = load_dataset("json", data_files={'train':self.args.train_data, 'eval':self.args.eval_data, 'test':self.args.test_data})
+            dataset = DatasetDict({'train': train_data, 'eval': dev_data, 'test': test_data})
+            # self.data_model = ImageDataModel(
+            #     self.tokenizer, self.args, train_data, dev_data, test_data)
             # dataset = load_dataset("json", data_files={'train':self.args.train_data, 'eval':self.args.eval_data, 'test':self.args.test_data})
             # dataset = dataset.map(self.get_features, batched=True, desc="Features for Input")
             # self.data_model = ImageDataModel(
             #     dataset['train'], dataset['eval'], dataset['test'], self.tokenizer, self.args)
-            self.model.num_data = len(train_data)
+            # self.model.num_data = len(train_data)
+        dataset = self.load_features(dataset, self.args.hg_datapath)
+        print(dataset)
+        self.data_model = ImageDataModel(
+            self.tokenizer, self.args, dataset=dataset)
+        self.model.num_data = len(dataset['train'])
         if self.args.load_checkpoints_path == "":
             del self.model.encoder
         self.trainer.fit(self.model, self.data_model)

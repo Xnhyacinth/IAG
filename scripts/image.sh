@@ -87,8 +87,11 @@ if [ "$dataset" == "WQ" ];then
   teacher_model="pretrained_models/wq_reader_$size"
   default_root_dir="output_wq"
 fi
+hg_datapath="dataset/Image/$dataset"
+extra_args="$extra_args --hg_datapath ${hg_datapath} --n_c ${n_c}"
+
 if [ "$n_c" != "0" ];then
-  hg_datapath="dataset/Image/$dataset"
+  # hg_datapath="dataset/Image/$dataset"
   # if [ "$dataset" == "TQA" ];then
   #   hg_datapath="dataset/Image/TQA"
   #   teacher_model="pretrained_models/tqa_reader_$size"
@@ -99,7 +102,7 @@ if [ "$n_c" != "0" ];then
   #   teacher_model="pretrained_models/wq_reader_$size"
   #   default_root_dir="output_wq"
   # fi
-  extra_args="$extra_args --hg_datapath ${hg_datapath} --n_c ${n_c}"
+  # extra_args="$extra_args --hg_datapath ${hg_datapath} --n_c ${n_c}"
   name="${name}_hg_ctxs${n_c}"
   echo "data from ${hg_datapath}"
 fi
