@@ -43,6 +43,8 @@ class ImageModel(nn.Module):
         elif args.hylora:
             self.model = T5LoraWrapper(
                 self.model, args.lora_rank, args.hidden_adapter_dim, args.load_hypernet_weights)
+        else:
+            self.model.set_checkpoint(args.use_checkpoint)
 
     def forward(self, input_ids, attention_mask, labels, features=None, **kwargs):
         output = self.model(input_ids=input_ids,

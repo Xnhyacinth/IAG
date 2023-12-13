@@ -13,7 +13,7 @@ echo "GPU: ${gpus}"
 accumulate_grad_batches=${3:-"1"}
 echo "accumulate_grad_batches: ${accumulate_grad_batches}"
 val_check_interval=${4:-"1000"}
-if [ "$val_check_interval" != "1" ];then
+if [ "$val_check_interval" != "1.0" ];then
   val_check_interval=`expr ${val_check_interval} \* ${accumulate_grad_batches}`
 fi
 echo "val_check_interval: ${val_check_interval}"
