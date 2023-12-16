@@ -291,7 +291,7 @@ class ImageLitModel(pl.LightningModule):
                     t_attn = [t_attn[0], t_attn[len(t_attn) // 2], t_attn[-1]]
 
                 loss_a = [
-                    att_mse_loss(a.repeat(t_a.size(0) // a.size(0), 1, 1, 1),
+                    att_mse_loss(a.repeat(1, t_a.size(0) // a.size(0), 1, 1).view(-1, a.size(1), a.size(2), a.size(3)),
                                  t_a, context_mask.view(context_mask.size(0) * context_mask.size(1), -1).repeat(t_a.size(0) // a.size(0), 1))
                     for a, t_a in zip(attn, t_attn)
                 ]
@@ -306,7 +306,7 @@ class ImageLitModel(pl.LightningModule):
                                 d_t_attn[len(d_t_attn) // 2], d_t_attn[-1]]
                 loss_a = [
                     att_ce_loss(
-                        a.repeat(t_a.size(0) // a.size(0), 1, 1, 1),
+                        a.repeat(1, t_a.size(0) // a.size(0), 1, 1).view(-1, a.size(1), a.size(2), a.size(3)),
                         t_a,
                         context_mask.view(
                             context_mask.size(0) * context_mask.size(1), -1
@@ -326,7 +326,7 @@ class ImageLitModel(pl.LightningModule):
 
                 loss_h = [
                     cos_loss(
-                        h.repeat(t_h.size(0) // h.size(0), 1, 1),
+                        h.repeat(1, t_h.size(0) // h.size(0), 1).view(-1, h.size(1), h.size(2)),
                         t_h,
                         context_mask.view(
                             context_mask.size(0) * context_mask.size(1), -1
@@ -343,8 +343,8 @@ class ImageLitModel(pl.LightningModule):
                     d_t_hd = [d_t_hd[0], d_t_hd[len(d_t_hd) // 2], d_t_hd[-1]]
                 loss_h = [
                     cos_loss(
-                        h.repeat(context_mask.size(1), 1, 1),
-                        t_h.repeat(context_mask.size(1), 1, 1),
+                        h.repeat(1, t_h.size(0) // h.size(0), 1).view(-1, h.size(1), h.size(2)),
+                        t_h,
                         context_mask.view(
                             context_mask.size(0) * context_mask.size(1), -1
                         ),

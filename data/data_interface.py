@@ -184,7 +184,7 @@ class ImageDataModel(pl.LightningDataModule):
         
         if self.args.cbqa or self.args.gold:
             context = [append_question(example, self.args.gold, self.args.cbqa) for example in batch]
-        elif "fid" in self.args.name:
+        elif "fid" in self.args.name or self.args.test_fid:
             context = text_passages
         else:
             context = [[ex['question'] + "\n" + ex['context']] for ex in batch]

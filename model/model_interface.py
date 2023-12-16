@@ -64,6 +64,7 @@ class MInterface(pl.LightningModule):
         # total_parser.add_argument("--load_best_model_at_end", action="store_true", default=True)
         total_parser.add_argument("--use_checkpoint", action="store_true")
         total_parser.add_argument("--use_context", action="store_true")
+        total_parser.add_argument("--test_fid", action="store_true")
         total_parser.add_argument(
             "--local_rank", type=int, default=-1, help="For distributed training: local_rank")
         total_parser.add_argument(

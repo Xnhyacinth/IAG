@@ -33,6 +33,7 @@ select=${16:-"all"}
 use_context=${17:-"no"}
 n_context=${18:-"100"}
 model_dataset=${19:-"NQ"}
+test_fid=${20:-"No"}
 default_root_dir="output_${dataset}"
 teacher_model="pretrained_models/nq_reader_$size"
 echo "batch_size: ${batch_size}"
@@ -118,6 +119,7 @@ if [ "$train" = "test" ];then
   file=test.py
   # load_checkpoints_path="output/hylora_kl_hg_ctxs5_gen_lr1e-3_base_usecontext_alllayers/ckpt/epoch=9-step=47032-val_em=38.56.ckpt"
   load_checkpoints_path="output_tqa/hylora_kl_hg_ctxs5_gen_lr1e-3_base_usecontext_alllayers_100/ckpt/epoch=7-step=36975-val_em=61.21.ckpt"
+  # load_checkpoints_path="output_tqa/fid_hg_ctxs1_cbqa_lr1e-3_base/ckpt/epoch=19-step=48797-val_em=21.36.ckpt"
   default_root_dir="output_test_${model_dataset}"
   name="${name}_test_${dataset}"
   extra_args="$extra_args --load_checkpoints_path $load_checkpoints_path"
@@ -130,6 +132,10 @@ if [ "$use_context" = "use_context" ];then
   name="${name}_usecontext"
 fi
 name="${name}_${select}layers_${n_context}"
+if [ "$test_fid" = "yes" ];then
+  extra_args="$extra_args --test_fid"
+  name="${name}_usefid"
+fi
 extra_args="$extra_args --name $name" # --resume_from_checkpoint output/hylora_all_lr1e-3/ckpt/last.ckpt
 echo "name: ${name}"
 echo "default_root_dir: ${default_root_dir}"
