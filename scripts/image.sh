@@ -13,7 +13,8 @@ echo "GPU: ${gpus}"
 accumulate_grad_batches=${3:-"1"}
 echo "accumulate_grad_batches: ${accumulate_grad_batches}"
 val_check_interval=${4:-"1000"}
-if [ "$val_check_interval" != "1.0" ];then
+y_or_n=`echo $val_check_interval 1.0 | awk '{if($1 > $2) print 1; else print 0;}'`
+if [ $y_or_n -eq 1 ];then
   val_check_interval=`expr ${val_check_interval} \* ${accumulate_grad_batches}`
 fi
 echo "val_check_interval: ${val_check_interval}"
@@ -31,6 +32,7 @@ train=${15:-"train"}
 select=${16:-"all"}
 use_context=${17:-"no"}
 n_context=${18:-"100"}
+model_dataset=${19:-"NQ"}
 default_root_dir="output_${dataset}"
 teacher_model="pretrained_models/nq_reader_$size"
 echo "batch_size: ${batch_size}"
@@ -110,9 +112,10 @@ name="${name}_${gold}_lr${lr}_${size}"
 file=main.py
 if [ "$train" = "test" ];then
   file=test.py
-  load_checkpoints_path="output/lora_kl/ckpt/epoch=15-step=39110-val_em=21.24.ckpt"
-  default_root_dir='output_test'
-  name="${name}_test"
+  # load_checkpoints_path="output/hylora_kl_hg_ctxs5_gen_lr1e-3_base_usecontext_alllayers/ckpt/epoch=9-step=47032-val_em=38.56.ckpt"
+  load_checkpoints_path="output_tqa/hylora_kl_hg_ctxs5_gen_lr1e-3_base_usecontext_alllayers_100/ckpt/epoch=7-step=36975-val_em=61.21.ckpt"
+  default_root_dir="output_test_${model_dataset}"
+  name="${name}_test_${dataset}"
   extra_args="$extra_args --load_checkpoints_path $load_checkpoints_path"
 fi
 if [ "$select" = "select" ];then

@@ -243,13 +243,11 @@ class MInterface(pl.LightningModule):
                 f.write(
                     f'load data from {data}, use compressed_ctxs_{self.args.n_c}')
             # dataset = load_dataset(self.args.hg_datapath)
+            dataset = load_from_disk(f'{data}/test')
             if 'TQA' in data:
-                dataset = load_from_disk('dataset/Image/TQA/test')
                 dataset = dataset.select_columns(
                     ['id', 'question', 'answers', 'target', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
             else:
-                # dataset = load_dataset('Xnhyacinth/Image', 'NQ', split='test')
-                dataset = load_from_disk('dataset/Image/NQ/test')
                 dataset = dataset.select_columns(
                     ['id', 'question', 'answers', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
             dataset = dataset.rename_column(
