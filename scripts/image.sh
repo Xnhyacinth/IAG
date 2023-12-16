@@ -52,6 +52,10 @@ fi
 if [ "$name" = "hylora" ];then
   extra_args="--hylora"
 fi
+if [ "$distill" = "distill" ];then
+  extra_args="$extra_args --do_distill"
+  name="${name}_distill"
+fi
 if [ "$distill" = "kl" ];then
   extra_args="$extra_args --use_kl --do_distill"
   name="${name}_kl"
