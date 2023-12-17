@@ -32,8 +32,8 @@ train=${15:-"train"}
 select=${16:-"all"}
 use_context=${17:-"no"}
 n_context=${18:-"100"}
-model_dataset=${19:-"NQ"}
-test_fid=${20:-"No"}
+test_fid=${19:-"No"}
+model_dataset=${20:-"NQ"}
 default_root_dir="output_${dataset}"
 teacher_model="pretrained_models/nq_reader_$size"
 echo "batch_size: ${batch_size}"
@@ -118,7 +118,8 @@ file=main.py
 if [ "$train" = "test" ];then
   file=test.py
   # load_checkpoints_path="output/hylora_kl_hg_ctxs5_gen_lr1e-3_base_usecontext_alllayers/ckpt/epoch=9-step=47032-val_em=38.56.ckpt"
-  load_checkpoints_path="output_tqa/hylora_kl_hg_ctxs5_gen_lr1e-3_base_usecontext_alllayers_100/ckpt/epoch=7-step=36975-val_em=61.21.ckpt"
+  # load_checkpoints_path="output_tqa/hylora_kl_hg_ctxs5_gen_lr1e-3_base_usecontext_alllayers_100/ckpt/epoch=7-step=36975-val_em=61.21.ckpt"
+  load_checkpoints_path="output_WQ/hylora_kl_hg_ctxs5_cbqa_lr1e-3_base_alllayers_100/ckpt/epoch=28-step=6322-val_em=31.67.ckpt"
   # load_checkpoints_path="output_tqa/fid_hg_ctxs1_cbqa_lr1e-3_base/ckpt/epoch=19-step=48797-val_em=21.36.ckpt"
   default_root_dir="output_test_${model_dataset}"
   name="${name}_test_${dataset}"

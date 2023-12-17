@@ -39,7 +39,7 @@
 # nohup bash scripts/image.sh 2 0,1 2 1.0 8 10000 hylora no no cbqa 1e-4 5 base WQ train all no 1 > logs_wq/hylora_nods_notrain_cbqa_lr1e-4_base_0_all.log 2>&1 &
 
 # lora_cbqa
-# nohup bash scripts/image.sh 1 1 4 0.5 4 50000 lora no no cbqa 1e-4 10 large NQ train all no 1 > logs/lora_nods_notrain_cbqa_lr1e-4_large_10_all.log 2>&1 &
+# nohup bash scripts/image.sh 1 0 2 0.5 16 50000 lora no no cbqa 5e-4 10 base NQ train all no 1 > logs/lora_nods_notrain_cbqa_lr5e-4_base_10_all.log 2>&1 &
 # sleep 5
 # nohup bash scripts/image.sh 1 0 4 0.5 4 50000 lora no no cbqa 1e-4 10 large TQA train all no 1 > logs_tqa/lora_nods_notrain_cbqa_lr1e-4_large_10_all.log 2>&1 &
 # # sleep 5
@@ -55,5 +55,5 @@
 # nohup bash scripts/image.sh 2 2,7 4 1000 2 50000 hylora kl no gold 1e-3 1 TQA > logs_tqa/hylora_kl_notrain_gold_lr1e-3.log 2>&1 &
 
 # test 
-bash scripts/image.sh 1 0 4 1.0 2 50000 hylora kl no gen 1e-3 5 base WQ test all use_context 10 TQA yes
+# bash scripts/image.sh 1 0 4 1.0 2 50000 hylora kl no gen 1e-3 5 base WQ test all use_context 10 yes TQA
 # bash scripts/image.sh 1 0 4 1.0 16 50000 fid no no cbqa 1e-3 5 base WQ test all no 1 TQA
