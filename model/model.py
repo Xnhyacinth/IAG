@@ -326,9 +326,8 @@ class HyperLora(nn.Module):
     return out
 
 class HyperNet(nn.Module):
-    def __init__(self, encoding_dim, input_dim, embedding_dim):
+    def __init__(self, encoding_dim, input_dim, embedding_dim, output_dim):
         super(HyperNet, self).__init__()
-        self.output_dim = input_dim
         self.hidden_dim = 8
         self.pre_down_linear = nn.Linear(encoding_dim+1, self.hidden_dim)
         self.pre_down_linear.weight, self.pre_down_linear.bias = self.init_layer(self.pre_down_linear)
@@ -336,11 +335,11 @@ class HyperNet(nn.Module):
         self.down_linear.weight, self.down_linear.bias = self.init_layer(self.down_linear)
         self.pre_up_linear = nn.Linear(encoding_dim+1, self.hidden_dim)
         self.pre_up_linear.weight, self.pre_up_linear.bias = self.init_layer(self.pre_up_linear)
-        self.up_linear = nn.Linear(self.hidden_dim, embedding_dim*self.output_dim)
+        self.up_linear = nn.Linear(self.hidden_dim, embedding_dim*output_dim)
         self.up_linear.weight, self.up_linear.bias = self.init_layer(self.up_linear)
 
         self.down_hypernet = HyperParamNet(self.pre_down_linear, self.down_linear, input_dim, embedding_dim)
-        self.up_hypernet = HyperParamNet(self.pre_up_linear, self.up_linear, embedding_dim, self.output_dim, scale=True)
+        self.up_hypernet = HyperParamNet(self.pre_up_linear, self.up_linear, embedding_dim, output_dim, scale=True)
 
     def init_layer(self, layer, bias=True):
         weight = nn.Parameter(torch.normal(0, 1e-7, layer.weight.shape))
@@ -356,16 +355,17 @@ class AdapterWrapper(nn.Module):
 
     Each child class needs to implement the init hypernet method that injects hypernet weights
     """
-    def __init__(self, model, embedding_dim, input_dim, weights):
+    def __init__(self, model, embedding_dim, weights):
         super(AdapterWrapper, self).__init__()
         self.model = model
         self.down_hypernet = None
         self.up_hypernet = None
         self.embedding_dim = embedding_dim
-        self.input_dim = input_dim
         self.encoding_dim = 255
+        down_dim = model.config.d_kv * model.config.num_heads
+        input_dim = model.config.d_model
 
-        self.hypernet = HyperNet(self.encoding_dim, self.input_dim, self.embedding_dim)
+        self.hypernet = HyperNet(self.encoding_dim, input_dim, self.embedding_dim, down_dim)
 
         if weights is not None:
             self.hypernet.load_state_dict(torch.load(weights, map_location=torch.device('cpu')))
@@ -478,8 +478,8 @@ class AdapterWrapper(nn.Module):
         return self.model.generate(**inputs)
 
 class T5LoraWrapper(AdapterWrapper):
-    def __init__(self, model, embedding_dim, input_dim, weights):
-        super().__init__(model, embedding_dim, input_dim, weights)
+    def __init__(self, model, embedding_dim, weights):
+        super().__init__(model, embedding_dim, weights)
     
     def init_hypernet(self):
         for i, l in enumerate(self.model.encoder.encoder.block):

@@ -41,8 +41,7 @@ class ImageModel(nn.Module):
             # add LoRA adaptor
             self.model = get_peft_model(self.model, lora_config)
         elif args.hylora:
-            self.model = T5LoraWrapper(
-                self.model, args.lora_rank, args.hidden_adapter_dim, args.load_hypernet_weights)
+            self.model = T5LoraWrapper(self.model, args.lora_rank, args.load_hypernet_weights)
         # else:
         #     self.model.set_checkpoint(args.use_checkpoint)
 

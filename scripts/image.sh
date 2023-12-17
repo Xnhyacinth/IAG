@@ -85,7 +85,7 @@ fi
 if [ "$gold" = "cbqa" ];then
   extra_args="$extra_args --cbqa"
 fi
-if [ "$size" = "large" ];then
+if [ "$size" != "base" ];then
   hidden_adapter_dim=1024
 fi
 if [ "$dataset" == "TQA" ];then
@@ -117,9 +117,9 @@ name="${name}_${gold}_lr${lr}_${size}"
 file=main.py
 if [ "$train" = "test" ];then
   file=test.py
-  # load_checkpoints_path="output/hylora_kl_hg_ctxs5_gen_lr1e-3_base_usecontext_alllayers/ckpt/epoch=9-step=47032-val_em=38.56.ckpt"
+  load_checkpoints_path="output/fid_cbqa_lr1e-3_hg_ctxs1/ckpt/epoch=19-step=49006-val_em=25.16.ckpt"
   # load_checkpoints_path="output_tqa/hylora_kl_hg_ctxs5_gen_lr1e-3_base_usecontext_alllayers_100/ckpt/epoch=7-step=36975-val_em=61.21.ckpt"
-  load_checkpoints_path="output_WQ/hylora_kl_hg_ctxs5_cbqa_lr1e-3_base_alllayers_100/ckpt/epoch=28-step=6322-val_em=31.67.ckpt"
+  # load_checkpoints_path="output_WQ/hylora_kl_hg_ctxs5_cbqa_lr1e-3_base_alllayers_100/ckpt/epoch=28-step=6322-val_em=31.67.ckpt"
   # load_checkpoints_path="output_tqa/fid_hg_ctxs1_cbqa_lr1e-3_base/ckpt/epoch=19-step=48797-val_em=21.36.ckpt"
   default_root_dir="output_test_${model_dataset}"
   name="${name}_test_${dataset}"
