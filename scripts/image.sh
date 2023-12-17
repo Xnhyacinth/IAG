@@ -45,7 +45,6 @@ while [[ $(ss -tln | grep ":$random_port") ]]; do
     random_port=$((RANDOM%(65535-1024+1)+1024))
 done
 export MASTER_PORT=${random_port}
-hidden_adapter_dim=768
 context_maxlength=512
 if [ "$name" = "lora" ];then
   extra_args="--lora"
@@ -84,9 +83,6 @@ if [ "$gold" = "gold" ];then
 fi
 if [ "$gold" = "cbqa" ];then
   extra_args="$extra_args --cbqa"
-fi
-if [ "$size" != "base" ];then
-  hidden_adapter_dim=1024
 fi
 if [ "$dataset" == "TQA" ];then
   teacher_model="pretrained_models/tqa_reader_$size"
@@ -170,7 +166,6 @@ deepspeed --include localhost:$gpus --master_port $MASTER_PORT ${file} \
         --alpha_kd 0.6 \
         --temperature 3.0 \
         --save_top_k 1 \
-        --hidden_adapter_dim ${hidden_adapter_dim} \
         ${extra_args}
                 # --resume_from_checkpoint None \
         # data/NQ/train.json 

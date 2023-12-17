@@ -86,8 +86,6 @@ class ImageLitModel(pl.LightningModule):
         parser.add_argument('--lora', action='store_true', help='lora or not')
         parser.add_argument("--lora_rank", type=int,
                             default=16, help='rank of lora')
-        parser.add_argument("--hidden_adapter_dim", type=int,
-                            default=768, help='Input dimension of adapter')
         parser.add_argument("--load_hypernet_weights", type=int, default=None,
                             help='Path to hypernet weights, otherwise random init')
         parser.add_argument(
@@ -389,17 +387,17 @@ class ImageLitModel(pl.LightningModule):
         for k, (o, gold) in enumerate(zip(outputs, answers)):
             ans = self.tokenizer.decode(o, skip_special_tokens=True)
             scores.append(ems(ans, gold))
-        if self.args.do_distill:
-            scores_teacher, t_scores_teacher = [], []
-            t_outputs_teacher = self.t_model.generate(
-                input_ids=t_context_ids, attention_mask=t_context_mask, max_length=50
-            )
-            for k, (t_o_t, gold) in enumerate(zip(t_outputs_teacher, answers)):
-                # ans_t = self.tokenizer.decode(o_t, skip_special_tokens=True)
-                t_ans_t = self.tokenizer.decode(
-                    t_o_t, skip_special_tokens=True)
-                t_scores_teacher.append(ems(t_ans_t, gold))
-            return scores, t_scores_teacher
+        # if self.args.do_distill:
+        #     scores_teacher, t_scores_teacher = [], []
+        #     t_outputs_teacher = self.t_model.generate(
+        #         input_ids=t_context_ids, attention_mask=t_context_mask, max_length=50
+        #     )
+        #     for k, (t_o_t, gold) in enumerate(zip(t_outputs_teacher, answers)):
+        #         # ans_t = self.tokenizer.decode(o_t, skip_special_tokens=True)
+        #         t_ans_t = self.tokenizer.decode(
+        #             t_o_t, skip_special_tokens=True)
+        #         t_scores_teacher.append(ems(t_ans_t, gold))
+        #     return scores, t_scores_teacher
         return scores
 
     def test_step(self, batch, batch_idx):
@@ -435,13 +433,13 @@ class ImageLitModel(pl.LightningModule):
         log = f"Eval | {self.global_step} / {self.total_step} |"
         log += (f"evaluation: {100*em:.2f}EM |")
         # teacher
-        if self.args.do_distill:
-            t_exactmatch_teacher = [_[1] for _ in validation_step_outputs]
-            t_em_teacher = self.compute_metrics(t_exactmatch_teacher)
-            # self.log("teacher exactmatch", exactmatch_teacher)
-            self.log("val/teacher long context em", t_em_teacher)
-            # log_t_em_teacher = self.compute_metrics(t_exactmatch_teacher, log=True)
-            log += (f"teacher evaluation long: {100*t_em_teacher:.2f}EM |")
+        # if self.args.do_distill:
+        #     t_exactmatch_teacher = [_[1] for _ in validation_step_outputs]
+        #     t_em_teacher = self.compute_metrics(t_exactmatch_teacher)
+        #     # self.log("teacher exactmatch", exactmatch_teacher)
+        #     self.log("val/teacher long context em", t_em_teacher)
+        #     # log_t_em_teacher = self.compute_metrics(t_exactmatch_teacher, log=True)
+        #     log += (f"teacher evaluation long: {100*t_em_teacher:.2f}EM |")
         log += f"lr: {self.lr_schedulers().get_last_lr()[0]:.5f}\n"
         # self.lg.info(log)
         with open(self.args.output_dir / 'logging.txt', 'a+') as f:
