@@ -40,9 +40,9 @@ class ImageDataset(Dataset):
     def get_target(self, example):
         if 'target' in example:
             target = example['target']
-            return target + ' '
+            return target
         elif 'answers' in example:
-            return random.choice(example['answers']) + ' '
+            return random.choice(example['answers'])
         else:
             return None
     
