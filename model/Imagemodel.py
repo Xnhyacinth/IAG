@@ -271,7 +271,6 @@ class ImageLitModel(pl.LightningModule):
             )
             # print(loss)
             if self.args.use_kl:
-                loss /= 2
                 p_s = F.log_softmax(logits / 4.0, dim=-1)
                 p_t = F.softmax(t_logits / 4.0, dim=-1)
                 loss += (
