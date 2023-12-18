@@ -268,9 +268,10 @@ class ImageLitModel(pl.LightningModule):
                 self.args.alpha_kd * self.cal_loss(logits, t_logits, self.args.temperature / (
                     1 + math.log(self.global_step // 500 + 1)))
                 + (1 - self.args.alpha_kd) * loss
-            ) / 2
+            )
             # print(loss)
             if self.args.use_kl:
+                loss /= 2
                 p_s = F.log_softmax(logits / 4.0, dim=-1)
                 p_t = F.softmax(t_logits / 4.0, dim=-1)
                 loss += (
