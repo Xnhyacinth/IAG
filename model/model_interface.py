@@ -195,6 +195,7 @@ class MInterface(pl.LightningModule):
             with open(self.args.output_dir / 'logging.txt', 'a+') as f:
                 f.write(
                     f'load data from {self.args.hg_datapath}, use compressed_ctxs_{self.args.n_c}\n')
+                f.close()
             # dataset = load_dataset(self.args.hg_datapath)
             dataset = load_from_disk(self.args.hg_datapath)
             if 'TQA' in self.args.hg_datapath:
@@ -244,6 +245,7 @@ class MInterface(pl.LightningModule):
             with open(self.args.output_dir / 'logging.txt', 'a+') as f:
                 f.write(
                     f'load data from {data}, use compressed_ctxs_{self.args.n_c}\n')
+                f.close()
             # dataset = load_dataset(self.args.hg_datapath)
             dataset = load_from_disk(f'{data}/test')
             if 'TQA' in data:
@@ -263,7 +265,8 @@ class MInterface(pl.LightningModule):
         start_time = time.time()
         self.trainer.test(self.model, self.data_model)
         with open(self.args.output_dir / 'logging.txt', 'a+') as f:
-            f.write(f'Time: {time.time() - start_time}\n')
+            f.write(f'Time: {time.time() - start_time:.1f}s & {(time.time() - start_time)//60}min{(time.time() - start_time)%60:.1f}s\n')
+            f.close()
 
     def save(self, save_name):
         if self.args.hylora:
