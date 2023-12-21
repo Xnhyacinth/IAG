@@ -14,6 +14,7 @@
 
 from collections import defaultdict
 import inspect
+import time
 import torch
 import importlib
 from torch.nn import functional as F
@@ -242,7 +243,7 @@ class MInterface(pl.LightningModule):
         if data is not None:
             with open(self.args.output_dir / 'logging.txt', 'a+') as f:
                 f.write(
-                    f'load data from {data}, use compressed_ctxs_{self.args.n_c}')
+                    f'load data from {data}, use compressed_ctxs_{self.args.n_c}\n')
             # dataset = load_dataset(self.args.hg_datapath)
             dataset = load_from_disk(f'{data}/test')
             if 'TQA' in data:
@@ -259,7 +260,10 @@ class MInterface(pl.LightningModule):
                 self.tokenizer, self.args, dataset=dataset)
         if model is not None:
             self.trainer.test(model, self.data_model)
+        start_time = time.time()
         self.trainer.test(self.model, self.data_model)
+        with open(self.args.output_dir / 'logging.txt', 'a+') as f:
+            f.write(f'Time: {time.time() - start_time}\n')
 
     def save(self, save_name):
         if self.args.hylora:

@@ -113,8 +113,9 @@ name="${name}_${gold}_lr${lr}_${size}"
 file=main.py
 if [ "$train" = "test" ];then
   file=test.py
-  load_checkpoints_path="output/fid_cbqa_lr1e-3_hg_ctxs1/ckpt/epoch=19-step=49006-val_em=25.16.ckpt"
+  # load_checkpoints_path="output/fid_cbqa_lr1e-3_hg_ctxs1/ckpt/epoch=19-step=49006-val_em=25.16.ckpt"
   # load_checkpoints_path="output_tqa/hylora_kl_hg_ctxs5_gen_lr1e-3_base_usecontext_alllayers_100/ckpt/epoch=7-step=36975-val_em=61.21.ckpt"
+  load_checkpoints_path="output_NQ/fid_hg_ctxs5_cbqa_lr1e-3_base_alllayers_5/ckpt/epoch=14-step=37110-val_em=24.47.ckpt"
   # load_checkpoints_path="output_WQ/hylora_kl_hg_ctxs5_cbqa_lr1e-3_base_alllayers_100/ckpt/epoch=28-step=6322-val_em=31.67.ckpt"
   # load_checkpoints_path="output_tqa/fid_hg_ctxs1_cbqa_lr1e-3_base/ckpt/epoch=19-step=48797-val_em=21.36.ckpt"
   default_root_dir="output_test_${model_dataset}"
@@ -163,7 +164,7 @@ deepspeed --include localhost:$gpus --master_port $MASTER_PORT ${file} \
         --model_name t5-${size} \
         --teacher_model ${teacher_model} \
         --t_learning_rate 5e-05 \
-        --alpha_kd 0.6 \
+        --alpha_kd 0.5 \
         --temperature 3.0 \
         --save_top_k 1 \
         ${extra_args}

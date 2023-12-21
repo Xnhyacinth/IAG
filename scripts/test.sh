@@ -4,10 +4,13 @@
 
 x=0
 dataset=NQ
+m=fid
 for d in WQ NQ TQA
     do
-        nohup bash scripts/image.sh 1 ${x} 4 1.0 4 50000 fid no no cbqa 1e-3 5 base ${d} test all no 1 no ${dataset} > logs_test/fid_train${dataset}_${d}.log 2>&1 &
+        nohup bash scripts/image.sh 1 ${x} 4 1.0 4 50000 ${fid} no no cbqa 1e-3 5 base ${d} test all no 1 no ${dataset} > logs_test/fid_train${dataset}_${d}.log 2>&1 &
         sleep 10
         echo ${x}
         let x+=1
     done
+
+# bash scripts/image.sh 1 1 4 1.0 16 50000 hylora kl no cbqa 1e-3 5 base TQA test all no 1 no NQ
