@@ -45,9 +45,9 @@ class ImageModel(nn.Module):
                 self.model, args.lora_rank, args.load_hypernet_weights)
         # else:
         #     self.model.set_checkpoint(args.use_checkpoint)
-        
+        params = self.get_parameter_number(self.model)
         with open(self.args.output_dir / 'logging.txt', 'a+') as f:
-            f.write(f'Parameter number: {self.get_parameter_number(self.model)}\n')
+            f.write(f'Parameter number Totel:{params["Total"]}, Trainable:{params["Trainable"]}\n')
             f.close()
         
         
