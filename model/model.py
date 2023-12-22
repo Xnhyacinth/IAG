@@ -16,6 +16,7 @@ from torchtyping import TensorType
 from typing import Optional
 import math
 
+
 class FiDT5(transformers.T5ForConditionalGeneration):
     def __init__(self, config):
         super().__init__(config)
@@ -23,9 +24,11 @@ class FiDT5(transformers.T5ForConditionalGeneration):
 
     def forward_(self, **kwargs):
         if 'input_ids' in kwargs:
-            kwargs['input_ids'] = kwargs['input_ids'].view(kwargs['input_ids'].size(0), -1)
+            kwargs['input_ids'] = kwargs['input_ids'].view(
+                kwargs['input_ids'].size(0), -1)
         if 'attention_mask' in kwargs:
-            kwargs['attention_mask'] = kwargs['attention_mask'].view(kwargs['attention_mask'].size(0), -1)
+            kwargs['attention_mask'] = kwargs['attention_mask'].view(
+                kwargs['attention_mask'].size(0), -1)
 
         return super(FiDT5, self).forward(
             **kwargs
@@ -62,7 +65,8 @@ class FiDT5(transformers.T5ForConditionalGeneration):
         """
         Wrap T5 encoder to obtain a Fusion-in-Decoder model.
         """
-        self.encoder = EncoderWrapper(self.encoder, use_checkpoint=use_checkpoint)
+        self.encoder = EncoderWrapper(
+            self.encoder, use_checkpoint=use_checkpoint)
 
     def unwrap_encoder(self):
         """
@@ -130,10 +134,12 @@ class FiDT5(transformers.T5ForConditionalGeneration):
             attn = mod.layer[1].EncDecAttention
             attn.forward = types.MethodType(cross_attention_forward, attn)
 
+
 class EncoderWrapper(torch.nn.Module):
     """
     Encoder Wrapper for T5 Wrapper to obtain a Fusion-in-Decoder model.
     """
+
     def __init__(self, encoder, use_checkpoint=False):
         super().__init__()
 
@@ -146,20 +152,24 @@ class EncoderWrapper(torch.nn.Module):
         bsz, total_length = input_ids.shape
         passage_length = total_length // self.n_passages
         input_ids = input_ids.view(bsz*self.n_passages, passage_length)
-        attention_mask = attention_mask.view(bsz*self.n_passages, passage_length)
+        attention_mask = attention_mask.view(
+            bsz*self.n_passages, passage_length)
         outputs = self.encoder(input_ids, attention_mask, **kwargs)
-        outputs = (outputs[0].view(bsz, self.n_passages*passage_length, -1), ) + outputs[1:]
+        outputs = (outputs[0].view(bsz, self.n_passages *
+                   passage_length, -1), ) + outputs[1:]
         return BaseModelOutput(
-                last_hidden_state=outputs[0],
-                hidden_states=outputs[1] if len(outputs) > 1 else None,
-                attentions=outputs[2] if len(outputs) > 2 else None,
-            )
+            last_hidden_state=outputs[0],
+            hidden_states=outputs[1] if len(outputs) > 1 else None,
+            attentions=outputs[2] if len(outputs) > 2 else None,
+        )
+
 
 class CheckpointWrapper(torch.nn.Module):
     """
     Wrapper replacing None outputs by empty tensors, which allows the use of
     checkpointing.
     """
+
     def __init__(self, module, use_checkpoint=False):
         super().__init__()
         self.module = module
@@ -168,6 +178,7 @@ class CheckpointWrapper(torch.nn.Module):
     def forward(self, hidden_states, attention_mask, position_bias, **kwargs):
         if self.use_checkpoint and self.training:
             kwargs = {k: v for k, v in kwargs.items() if v is not None}
+
             def custom_forward(*inputs):
                 output = self.module(*inputs, **kwargs)
                 empty = torch.tensor(
@@ -186,8 +197,10 @@ class CheckpointWrapper(torch.nn.Module):
             )
             output = tuple(x if x.size() != 0 else None for x in output)
         else:
-            output = self.module(hidden_states, attention_mask, position_bias, **kwargs)
+            output = self.module(
+                hidden_states, attention_mask, position_bias, **kwargs)
         return output
+
 
 def apply_checkpoint_wrapper(t5stack, use_checkpoint):
     """
@@ -200,24 +213,25 @@ def apply_checkpoint_wrapper(t5stack, use_checkpoint):
     block = nn.ModuleList(block)
     t5stack.block = block
 
+
 def cross_attention_forward(
-        self,
-        input,
-        mask=None,
-        kv=None,
-        position_bias=None,
-        past_key_value_state=None,
-        head_mask=None,
-        query_length=None,
-        use_cache=False,
-        output_attentions=False,
-    ):
+    self,
+    input,
+    mask=None,
+    kv=None,
+    position_bias=None,
+    past_key_value_state=None,
+    head_mask=None,
+    query_length=None,
+    use_cache=False,
+    output_attentions=False,
+):
     """
     This only works for computing cross attention over the input
     """
-    assert(kv != None)
-    assert(head_mask == None)
-    assert(position_bias != None or self.has_relative_attention_bias)
+    assert (kv != None)
+    assert (head_mask == None)
+    assert (position_bias != None or self.has_relative_attention_bias)
 
     bsz, qlen, dim = input.size()
     n_heads, d_heads = self.n_heads, self.d_kv
@@ -233,7 +247,7 @@ def cross_attention_forward(
     scores = torch.einsum("bnqd,bnkd->bnqk", q, k)
 
     if mask is not None:
-       scores += mask
+        scores += mask
 
     if position_bias is None:
         position_bias = self.compute_bias(qlen, klen)
@@ -262,84 +276,98 @@ def cross_attention_forward(
 
     return output
 
+
 class HyperParamNet(nn.Module):
-  """
-  Helper class to wrap together hypernetwork weights "linear1" and "linear2" into MLP
+    """
+    Helper class to wrap together hypernetwork weights "linear1" and "linear2" into MLP
 
-  Arguments:
-  - linear1 : Downsampling weight (encoding dim x bottleneck)
-  - linear2 : Upsampling weight (bottleneck x dim)
-  - dim : output dim
-  - bottleneck : bottleneck dim
+    Arguments:
+    - linear1 : Downsampling weight (encoding dim x bottleneck)
+    - linear2 : Upsampling weight (bottleneck x dim)
+    - dim : output dim
+    - bottleneck : bottleneck dim
 
-  Output:
-  Adapter weight generated by hypernetworks with dialect feature input
-  """
-  def __init__(self, linear1, linear2, dim, bottleneck, scale=False):
-    super().__init__()
-    self.linear1 = linear1
-    self.linear2 = linear2
-    self.dim = dim #Output dimension
-    self.bottleneck = bottleneck #MLP bottleneck
-    if scale:
-      self.scale = math.sqrt(dim)
-    else:
-      self.scale = 1
+    Output:
+    Adapter weight generated by hypernetworks with dialect feature input
+    """
 
-  def set_features(self, features):
-    self.features = features
-    return
-  
-  def forward(self, features):
-    output = self.linear2(F.relu(self.linear1(features))).reshape(-1, self.dim, self.bottleneck)
-    return output/self.scale
+    def __init__(self, linear1, linear2, dim, bottleneck, scale=False):
+        super().__init__()
+        self.linear1 = linear1
+        self.linear2 = linear2
+        self.dim = dim  # Output dimension
+        self.bottleneck = bottleneck  # MLP bottleneck
+        if scale:
+            self.scale = math.sqrt(dim)
+        else:
+            self.scale = 1
+
+    def set_features(self, features):
+        self.features = features
+        return
+
+    def forward(self, features):
+        output = self.linear2(F.relu(self.linear1(features))
+                              ).reshape(-1, self.dim, self.bottleneck)
+        return output/self.scale
+
 
 class HyperLora(nn.Module):
-  """
-  Simple MLP Hypernet
-  """
-  def __init__(self, linear : nn.Module, hypernet1=None, hypernet2=None, idx=0):
-    super().__init__()
+    """
+    Simple MLP Hypernet
+    """
 
-    self.linear = linear
-    self.hypernet1 = hypernet1
-    self.hypernet2 = hypernet2
-    self.dropout = nn.Dropout(p=0.1)
-    # Layer idx
-    self.idx = idx
+    def __init__(self, linear: nn.Module, hypernet1=None, hypernet2=None, idx=0):
+        super().__init__()
 
-  def forward(self, x):
-    # Conditioning variable (either indicator or example)
-    val = self.hypernet1.features
-    # Layer idx is added to conditioning variable
-    if self.idx is not None:
-      val = nn.functional.pad(val, (0, 1), value=self.idx)
-    
-    # Compute hypernet weights
-    weight1 = self.hypernet1(val)
-    weight2 = self.hypernet2(val)
-    weight1 = weight1.repeat(1, x.shape[0] // weight1.shape[0], 1).view(-1, weight1.shape[1], weight1.shape[2])
-    weight2 = weight2.repeat(1, x.shape[0] // weight2.shape[0], 1).view(-1, weight2.shape[1], weight2.shape[2])
-    # Apply lora
-    out = self.dropout(self.linear(x))
-    out = torch.matmul(torch.matmul(x, weight1), weight2) + out
-    return out
+        self.linear = linear
+        self.hypernet1 = hypernet1
+        self.hypernet2 = hypernet2
+        self.dropout = nn.Dropout(p=0.1)
+        # Layer idx
+        self.idx = idx
+
+    def forward(self, x):
+        # Conditioning variable (either indicator or example)
+        val = self.hypernet1.features
+        # Layer idx is added to conditioning variable
+        if self.idx is not None:
+            val = nn.functional.pad(val, (0, 1), value=self.idx)
+
+        # Compute hypernet weights
+        weight1 = self.hypernet1(val)
+        weight2 = self.hypernet2(val)
+        weight1 = weight1.repeat(
+            1, x.shape[0] // weight1.shape[0], 1).view(-1, weight1.shape[1], weight1.shape[2])
+        weight2 = weight2.repeat(
+            1, x.shape[0] // weight2.shape[0], 1).view(-1, weight2.shape[1], weight2.shape[2])
+        # Apply lora
+        out = self.dropout(self.linear(x))
+        out = torch.matmul(torch.matmul(x, weight1), weight2) + out
+        return out
+
 
 class HyperNet(nn.Module):
     def __init__(self, encoding_dim, input_dim, embedding_dim, output_dim):
         super(HyperNet, self).__init__()
         self.hidden_dim = 8
         self.pre_down_linear = nn.Linear(encoding_dim+1, self.hidden_dim)
-        self.pre_down_linear.weight, self.pre_down_linear.bias = self.init_layer(self.pre_down_linear)
+        self.pre_down_linear.weight, self.pre_down_linear.bias = self.init_layer(
+            self.pre_down_linear)
         self.down_linear = nn.Linear(self.hidden_dim, input_dim*embedding_dim)
-        self.down_linear.weight, self.down_linear.bias = self.init_layer(self.down_linear)
+        self.down_linear.weight, self.down_linear.bias = self.init_layer(
+            self.down_linear)
         self.pre_up_linear = nn.Linear(encoding_dim+1, self.hidden_dim)
-        self.pre_up_linear.weight, self.pre_up_linear.bias = self.init_layer(self.pre_up_linear)
+        self.pre_up_linear.weight, self.pre_up_linear.bias = self.init_layer(
+            self.pre_up_linear)
         self.up_linear = nn.Linear(self.hidden_dim, embedding_dim*output_dim)
-        self.up_linear.weight, self.up_linear.bias = self.init_layer(self.up_linear)
+        self.up_linear.weight, self.up_linear.bias = self.init_layer(
+            self.up_linear)
 
-        self.down_hypernet = HyperParamNet(self.pre_down_linear, self.down_linear, input_dim, embedding_dim)
-        self.up_hypernet = HyperParamNet(self.pre_up_linear, self.up_linear, embedding_dim, output_dim, scale=True)
+        self.down_hypernet = HyperParamNet(
+            self.pre_down_linear, self.down_linear, input_dim, embedding_dim)
+        self.up_hypernet = HyperParamNet(
+            self.pre_up_linear, self.up_linear, embedding_dim, output_dim, scale=True)
 
     def init_layer(self, layer, bias=True):
         weight = nn.Parameter(torch.normal(0, 1e-7, layer.weight.shape))
@@ -349,12 +377,14 @@ class HyperNet(nn.Module):
             bias = None
         return weight, bias
 
+
 class AdapterWrapper(nn.Module):
     """
     General Wrapper Class for Hypernet Config
 
     Each child class needs to implement the init hypernet method that injects hypernet weights
     """
+
     def __init__(self, model, embedding_dim, weights):
         super(AdapterWrapper, self).__init__()
         self.model = model
@@ -365,10 +395,18 @@ class AdapterWrapper(nn.Module):
         down_dim = model.config.d_kv * model.config.num_heads
         input_dim = model.config.d_model
 
-        self.hypernet = HyperNet(self.encoding_dim, input_dim, self.embedding_dim, down_dim)
+        self.hypernet = HyperNet(
+            self.encoding_dim, input_dim, self.embedding_dim, down_dim)
 
+        self.decoder_hypernet = HyperNet(
+            self.encoding_dim, input_dim, self.embedding_dim, down_dim)
+        
+        self.cross_hypernet = HyperNet(
+            self.encoding_dim, input_dim, self.embedding_dim, down_dim)
+        
         if weights is not None:
-            self.hypernet.load_state_dict(torch.load(weights, map_location=torch.device('cpu')))
+            self.hypernet.load_state_dict(torch.load(
+                weights, map_location=torch.device('cpu')))
             print("WEIGHTS LOADED")
 
         # self.earth_mover_loss = SamplesLoss(loss="sinkhorn", p=2)
@@ -384,11 +422,11 @@ class AdapterWrapper(nn.Module):
         pass
 
     def freeze_params(self):
-        # All modules in the 
+        # All modules in the
         # modules_to_freeze = [self.model.encoder.encoder.block[i].layer[0] for i in range(len(self.model.encoder.encoder.block))]
         # modules_to_freeze = [l.module.layer[0] if hasattr(l, "module") else l.layer[0] for l in self.model.encoder.encoder.block]
         # # modules_to_freeze.extend([l.module.layer[1] if hasattr(l, "module") else l.layer[1] for l in self.model.encoder.encoder.block])
-        # # And the decoder modules, which has both a SelfAttention (layer[0]) 
+        # # And the decoder modules, which has both a SelfAttention (layer[0])
         # modules_to_freeze.extend([self.model.decoder.block[i].layer[0] for i in range(len(self.model.decoder.block))])
         # # and CrossAttention (layer[1]) block
         # modules_to_freeze.extend([self.model.decoder.block[i].layer[1] for i in range(len(self.model.decoder.block))])
@@ -397,9 +435,20 @@ class AdapterWrapper(nn.Module):
         #     for param in module.parameters():
         #         param.requires_grad = False  # Actual freezing operation
         for layer in self.model.modules():
+            for _, param in layer.named_parameters():
+                param.requires_grad = False
+        # self.hypernet.pre_down_linear.weight.requires_grad = True
+        # self.hypernet.pre_down_linear.bias.requires_grad = True
+        # self.hypernet.pre_up_linear.weight.requires_grad = True
+        # self.hypernet.pre_up_linear.bias.requires_grad = True
+        # self.hypernet.down_linear.weight.requires_grad = True
+        # self.hypernet.down_linear.bias.requires_grad = True
+        # self.hypernet.up_linear.weight.requires_grad = True
+        # self.hypernet.up_linear.bias.requires_grad = True
+        for layer in self.model.modules():
             for x, param in layer.named_parameters():
-                if "norm" not in x or "emb" not in x:
-                    param.requires_grad = False
+                if "norm" in x or "emb" in x or "hypernet" in x:
+                    param.requires_grad = True
 
     @torch.no_grad()
     def produce_original_embeddings(
@@ -428,26 +477,29 @@ class AdapterWrapper(nn.Module):
         self.train(True)
         return outputs.last_hidden_state, attention_mask
 
-    def last_emb(self, input_ids, attention_mask, dialect_features, original_mask=None, original_embedding=None, include_original=True,**kwargs):
+    def last_emb(self, input_ids, attention_mask, dialect_features, original_mask=None, original_embedding=None, include_original=True, **kwargs):
         """
         forward model needs to include dialect_features parameter for Trainer to not discard this feature
         """
-        inputs = {"input_ids": input_ids, "attention_mask": attention_mask, **kwargs}
+        inputs = {"input_ids": input_ids,
+                  "attention_mask": attention_mask, **kwargs}
         if include_original:
             inputs["original_embedding"] = original_embedding
             inputs["original_mask"] = original_mask
 
-        self.hypernet.down_hypernet.set_dialect_features(self.emb(dialect_features))
-        self.hypernet.up_hypernet.set_dialect_features(self.emb(dialect_features))
+        self.hypernet.down_hypernet.set_dialect_features(
+            self.emb(dialect_features))
+        self.hypernet.up_hypernet.set_dialect_features(
+            self.emb(dialect_features))
         # self.hypernet.layernorm_w_hypernet.set_dialect_features(self.emb(dialect_features))
         # self.hypernet.layernorm_b_hypernet.set_dialect_features(self.emb(dialect_features))
         outputs = self.model(**inputs)
         return outputs
-    
-    def get_weight(self, mask):             
-        probs = torch.div(mask, mask.sum(1).reshape(-1,1))                                                                                                          
+
+    def get_weight(self, mask):
+        probs = torch.div(mask, mask.sum(1).reshape(-1, 1))
         return probs
-  
+
     def emb(self, l):
         """
         PCA Embedding of linguistic attestation vector
@@ -461,39 +513,45 @@ class AdapterWrapper(nn.Module):
         """
         forward model needs to include features parameter for Trainer to not discard this feature
         """
-        inputs = {"labels":labels, "input_ids": input_ids, "attention_mask": attention_mask, **kwargs}
+        inputs = {"labels": labels, "input_ids": input_ids,
+                  "attention_mask": attention_mask, **kwargs}
         if include_original:
             inputs["original_embedding"] = original_embedding
             inputs["original_mask"] = original_mask
 
         self.hypernet.down_hypernet.set_features(self.emb(features))
         self.hypernet.up_hypernet.set_features(self.emb(features))
+        self.decoder_hypernet.down_hypernet.set_features(self.emb(features))
+        self.decoder_hypernet.up_hypernet.set_features(self.emb(features))
+        # self.cross_hypernet.down_hypernet.set_features(self.emb(features))
+        # self.cross_hypernet.up_hypernet.set_features(self.emb(features))
         outputs = self.model(**inputs)
 
         return outputs
-    
+
     def generate(self, input_ids, attention_mask, features=None, **kwargs):
-        inputs = {"input_ids": input_ids, "attention_mask": attention_mask, **kwargs}
+        inputs = {"input_ids": input_ids,
+                  "attention_mask": attention_mask, **kwargs}
         self.hypernet.down_hypernet.set_features(self.emb(features))
         self.hypernet.up_hypernet.set_features(self.emb(features))
         return self.model.generate(**inputs)
 
+
 class T5LoraWrapper(AdapterWrapper):
     def __init__(self, model, embedding_dim, weights):
         super().__init__(model, embedding_dim, weights)
-    
+
     def init_hypernet(self):
         for i, l in enumerate(self.model.encoder.encoder.block):
             l = l.module if hasattr(l, "module") else l
             l.layer[0].SelfAttention.q = HyperLora(l.layer[0].SelfAttention.q, self.hypernet.down_hypernet, self.hypernet.up_hypernet, 2*i)
             l.layer[0].SelfAttention.v = HyperLora(l.layer[0].SelfAttention.v, self.hypernet.down_hypernet, self.hypernet.up_hypernet, 2*i+1)
-
+        for i, l in enumerate(self.model.decoder.block):
+            l = l.module if hasattr(l, "module") else l
+            l.layer[0].SelfAttention.q = HyperLora(l.layer[0].SelfAttention.q, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 4*i)
+            l.layer[0].SelfAttention.v = HyperLora(l.layer[0].SelfAttention.v, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 4*i+1)
+            l.layer[1].EncDecAttention.q = HyperLora(l.layer[1].EncDecAttention.q, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 4*i+2)
+            l.layer[1].EncDecAttention.v = HyperLora(l.layer[1].EncDecAttention.v, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 4*i+3)
+            # l.layer[0].SelfAttention.q = HyperLora(l.layer[0].SelfAttention.q, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 2*i)
+            # l.layer[0].SelfAttention.v = HyperLora(l.layer[0].SelfAttention.v, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 2*i+1)
         self.freeze_params()
-        self.hypernet.pre_down_linear.weight.requires_grad = True
-        self.hypernet.pre_down_linear.bias.requires_grad = True
-        self.hypernet.pre_up_linear.weight.requires_grad = True
-        self.hypernet.pre_up_linear.bias.requires_grad = True
-        self.hypernet.down_linear.weight.requires_grad = True
-        self.hypernet.down_linear.bias.requires_grad = True
-        self.hypernet.up_linear.weight.requires_grad = True
-        self.hypernet.up_linear.bias.requires_grad = True

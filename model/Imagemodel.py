@@ -45,7 +45,7 @@ class ImageModel(nn.Module):
                 self.model, args.lora_rank, args.load_hypernet_weights)
         # else:
         #     self.model.set_checkpoint(args.use_checkpoint)
-
+        
     def forward(self, input_ids, attention_mask, labels, features=None, **kwargs):
         output = self.model(input_ids=input_ids,
                             attention_mask=attention_mask,
@@ -154,6 +154,7 @@ class ImageLitModel(pl.LightningModule):
             # add LoRA adaptor
             # self.t_model = get_peft_model(self.t_model, lora_config)
             if not args.train_teacher:
+                print("no train teacher")
                 for layer in self.t_model.modules():
                     for _, param in layer.named_parameters():
                         param.requires_grad = False
