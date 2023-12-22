@@ -41,7 +41,8 @@ class ImageModel(nn.Module):
             # add LoRA adaptor
             self.model = get_peft_model(self.model, lora_config)
         elif args.hylora:
-            self.model = T5LoraWrapper(self.model, args.lora_rank, args.load_hypernet_weights)
+            self.model = T5LoraWrapper(
+                self.model, args.lora_rank, args.load_hypernet_weights)
         # else:
         #     self.model.set_checkpoint(args.use_checkpoint)
 
@@ -152,6 +153,10 @@ class ImageLitModel(pl.LightningModule):
             )
             # add LoRA adaptor
             # self.t_model = get_peft_model(self.t_model, lora_config)
+            if not args.train_teacher:
+                for layer in self.t_model.modules():
+                    for _, param in layer.named_parameters():
+                        param.requires_grad = False
             self.t_optimizer = torch.optim.AdamW(filter(
                 lambda p: p.requires_grad, self.t_model.parameters()), lr=args.t_learning_rate)
             self.t_scheduler = transformers.get_linear_schedule_with_warmup(optimizer=self.t_optimizer,
@@ -273,9 +278,10 @@ class ImageLitModel(pl.LightningModule):
             if self.args.use_kl:
                 p_s = F.log_softmax(logits / 4.0, dim=-1)
                 p_t = F.softmax(t_logits / 4.0, dim=-1)
-                loss += (
+                kl_loss = (
                     F.kl_div(p_s, p_t, reduction='batchmean')
                 ) / 100
+                loss += torch.sigmoid(kl_loss) * kl_loss
                 # print((
                 #     F.kl_div(p_s, p_t, reduction='batchmean')
                 # ) / 100)
@@ -303,7 +309,8 @@ class ImageLitModel(pl.LightningModule):
                                 d_t_attn[len(d_t_attn) // 2], d_t_attn[-1]]
                 loss_a = [
                     att_ce_loss(
-                        a.repeat(1, t_a.size(0) // a.size(0), 1, 1).view(-1, a.size(1), a.size(2), a.size(3)),
+                        a.repeat(1, t_a.size(0) // a.size(0), 1,
+                                 1).view(-1, a.size(1), a.size(2), a.size(3)),
                         t_a,
                         context_mask.view(
                             context_mask.size(0) * context_mask.size(1), -1
@@ -323,7 +330,8 @@ class ImageLitModel(pl.LightningModule):
 
                 loss_h = [
                     cos_loss(
-                        h.repeat(1, t_h.size(0) // h.size(0), 1).view(-1, h.size(1), h.size(2)),
+                        h.repeat(1, t_h.size(0) // h.size(0),
+                                 1).view(-1, h.size(1), h.size(2)),
                         t_h,
                         context_mask.view(
                             context_mask.size(0) * context_mask.size(1), -1
@@ -340,7 +348,8 @@ class ImageLitModel(pl.LightningModule):
                     d_t_hd = [d_t_hd[0], d_t_hd[len(d_t_hd) // 2], d_t_hd[-1]]
                 loss_h = [
                     cos_loss(
-                        h.repeat(1, t_h.size(0) // h.size(0), 1).view(-1, h.size(1), h.size(2)),
+                        h.repeat(1, t_h.size(0) // h.size(0),
+                                 1).view(-1, h.size(1), h.size(2)),
                         t_h,
                         context_mask.view(
                             context_mask.size(0) * context_mask.size(1), -1
