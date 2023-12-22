@@ -46,6 +46,17 @@ class ImageModel(nn.Module):
         # else:
         #     self.model.set_checkpoint(args.use_checkpoint)
         
+        with open(self.args.output_dir / 'logging.txt', 'a+') as f:
+            f.write(f'Parameter number: {self.get_parameter_number(self.model)}\n')
+            f.close()
+        
+        
+    def get_parameter_number(self, model):
+        total_num = sum(p.numel() for p in model.parameters())
+        trainable_num = sum(p.numel() for p in model.parameters() if p.requires_grad)
+        return {'Total': total_num, 'Trainable': trainable_num}
+
+        
     def forward(self, input_ids, attention_mask, labels, features=None, **kwargs):
         output = self.model(input_ids=input_ids,
                             attention_mask=attention_mask,
