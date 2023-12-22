@@ -45,16 +45,15 @@ class ImageModel(nn.Module):
                 self.model, args.lora_rank, args.load_hypernet_weights)
         # else:
         #     self.model.set_checkpoint(args.use_checkpoint)
-        params = self.get_parameter_number(self.model)
-        with open(self.args.output_dir / 'logging.txt', 'a+') as f:
-            f.write(f'Parameter number Totel:{params["Total"]}, Trainable:{params["Trainable"]}\n')
+        total_num, trainable_num = self.get_parameter_number(self.model)
+        with open(args.output_dir / 'logging.txt', 'a+') as f:
+            f.write(f'Parameter number Totel:{total_num}, Trainable:{trainable_num}\n')
             f.close()
-        
         
     def get_parameter_number(self, model):
         total_num = sum(p.numel() for p in model.parameters())
         trainable_num = sum(p.numel() for p in model.parameters() if p.requires_grad)
-        return {'Total': total_num, 'Trainable': trainable_num}
+        return total_num, trainable_num
 
         
     def forward(self, input_ids, attention_mask, labels, features=None, **kwargs):
