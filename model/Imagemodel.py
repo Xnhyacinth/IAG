@@ -141,6 +141,11 @@ class ImageLitModel(pl.LightningModule):
 
     def load_teacher(self, args):
         self.t_model = FiDT5.from_pretrained(args.teacher_model)
+        if not args.train_teacher:
+            print("no train teacher")
+            for layer in self.t_model.modules():
+                for _, param in layer.named_parameters():
+                    param.requires_grad = False
         if args.train_teacher or args.use_lgtm:
             # Define LoRA Config
             lora_config = LoraConfig(
@@ -153,11 +158,7 @@ class ImageLitModel(pl.LightningModule):
             )
             # add LoRA adaptor
             # self.t_model = get_peft_model(self.t_model, lora_config)
-            if not args.train_teacher:
-                print("no train teacher")
-                for layer in self.t_model.modules():
-                    for _, param in layer.named_parameters():
-                        param.requires_grad = False
+            
             self.t_optimizer = torch.optim.AdamW(filter(
                 lambda p: p.requires_grad, self.t_model.parameters()), lr=args.t_learning_rate)
             self.t_scheduler = transformers.get_linear_schedule_with_warmup(optimizer=self.t_optimizer,
