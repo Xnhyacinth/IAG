@@ -32,8 +32,9 @@ train=${15:-"train"}
 select=${16:-"all"}
 use_context=${17:-"no"}
 n_context=${18:-"100"}
-test_fid=${19:-"No"}
-model_dataset=${20:-"NQ"}
+lora_rank=${19:-"32"}
+test_fid=${20:-"No"}
+model_dataset=${21:-"NQ"}
 default_root_dir="output_${dataset}"
 teacher_model="pretrained_models/nq_reader_$size"
 echo "batch_size: ${batch_size}"
@@ -112,7 +113,7 @@ if [ "$n_c" != "0" ];then
   name="${name}_hg_ctxs${n_c}"
   echo "data from ${hg_datapath}"
 fi
-name="${name}_${gold}_lr${lr}_${size}"
+name="${name}_${gold}_lr${lr}_${size}_rank${lora_rank}"
 file=main.py
 if [ "$train" = "test" ];then
   file=test.py
@@ -167,10 +168,11 @@ deepspeed --include localhost:$gpus --master_port $MASTER_PORT ${file} \
         --model_name t5-${size} \
         --teacher_model ${teacher_model} \
         --t_learning_rate 5e-05 \
-        --alpha_kd 0.5 \
+        --alpha_kd 0.4 \
         --temperature 3.0 \
         --save_top_k 1 \
-        --r 256 \
+        --r ${lora_rank} \
+        --lora_rank ${lora_rank} \
         ${extra_args}
                 # --resume_from_checkpoint None \
         # data/NQ/train.json 

@@ -40,6 +40,10 @@ class ImageModel(nn.Module):
             )
             # add LoRA adaptor
             self.model = get_peft_model(self.model, lora_config)
+            for layer in self.model.modules():
+                for x, param in layer.named_parameters():
+                    if "norm" in x or "emb" in x:
+                        param.requires_grad = True
         elif args.hylora:
             self.model = T5LoraWrapper(
                 self.model, args.lora_rank, args.load_hypernet_weights, args)
