@@ -475,7 +475,7 @@ class ImageLitModel(pl.LightningModule):
         em = self.compute_metrics(exactmatch)
         self.log("test/em", em*100)
         log = f"Test | "
-        log += (f"evaluation: {100*em:.2f}EM |")
+        log += (f"evaluation: {100*em:.2f}EM\n")
         with open(self.args.output_dir / 'logging.txt', 'a+') as f:
             f.write(log)
             f.close()
