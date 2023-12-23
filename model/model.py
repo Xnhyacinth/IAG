@@ -385,13 +385,14 @@ class AdapterWrapper(nn.Module):
     Each child class needs to implement the init hypernet method that injects hypernet weights
     """
 
-    def __init__(self, model, embedding_dim, weights):
+    def __init__(self, model, embedding_dim, weights, args):
         super(AdapterWrapper, self).__init__()
         self.model = model
         self.down_hypernet = None
         self.up_hypernet = None
         self.embedding_dim = embedding_dim
         self.encoding_dim = 255
+        self.args = args
         down_dim = model.config.d_kv * model.config.num_heads
         input_dim = model.config.d_model
 
@@ -426,10 +427,6 @@ class AdapterWrapper(nn.Module):
             for layer in self.model.modules():
                 for _, param in layer.named_parameters():
                     param.requires_grad = False
-            for layer in self.model.modules():
-                for x, param in layer.named_parameters():
-                    if "norm" in x or "emb" in x or "hypernet" in x:
-                        param.requires_grad = True
         else:
             # All modules in the
             # modules_to_freeze = [self.model.encoder.encoder.block[i].layer[0] for i in range(len(self.model.encoder.encoder.block))]
@@ -443,14 +440,18 @@ class AdapterWrapper(nn.Module):
             for module in modules_to_freeze:
                 for param in module.parameters():
                     param.requires_grad = False  # Actual freezing operation
-            self.hypernet.pre_down_linear.weight.requires_grad = True
-            self.hypernet.pre_down_linear.bias.requires_grad = True
-            self.hypernet.pre_up_linear.weight.requires_grad = True
-            self.hypernet.pre_up_linear.bias.requires_grad = True
-            self.hypernet.down_linear.weight.requires_grad = True
-            self.hypernet.down_linear.bias.requires_grad = True
-            self.hypernet.up_linear.weight.requires_grad = True
-            self.hypernet.up_linear.bias.requires_grad = True
+        for layer in self.model.modules():
+            for x, param in layer.named_parameters():
+                if "norm" in x or "emb" in x or "hypernet" in x:
+                    param.requires_grad = True
+            # self.hypernet.pre_down_linear.weight.requires_grad = True
+            # self.hypernet.pre_down_linear.bias.requires_grad = True
+            # self.hypernet.pre_up_linear.weight.requires_grad = True
+            # self.hypernet.pre_up_linear.bias.requires_grad = True
+            # self.hypernet.down_linear.weight.requires_grad = True
+            # self.hypernet.down_linear.bias.requires_grad = True
+            # self.hypernet.up_linear.weight.requires_grad = True
+            # self.hypernet.up_linear.bias.requires_grad = True
 
     @torch.no_grad()
     def produce_original_embeddings(
@@ -525,8 +526,8 @@ class AdapterWrapper(nn.Module):
         self.hypernet.up_hypernet.set_features(self.emb(features))
         self.decoder_hypernet.down_hypernet.set_features(self.emb(features))
         self.decoder_hypernet.up_hypernet.set_features(self.emb(features))
-        # self.cross_hypernet.down_hypernet.set_features(self.emb(features))
-        # self.cross_hypernet.up_hypernet.set_features(self.emb(features))
+        self.cross_hypernet.down_hypernet.set_features(self.emb(features))
+        self.cross_hypernet.up_hypernet.set_features(self.emb(features))
         outputs = self.model(**inputs)
 
         return outputs
@@ -541,8 +542,7 @@ class AdapterWrapper(nn.Module):
 
 class T5LoraWrapper(AdapterWrapper):
     def __init__(self, model, embedding_dim, weights, args):
-        super().__init__(model, embedding_dim, weights)
-        self.args = args
+        super().__init__(model, embedding_dim, weights, args)
 
     def init_hypernet(self):
         for i, l in enumerate(self.model.encoder.encoder.block):
@@ -551,10 +551,8 @@ class T5LoraWrapper(AdapterWrapper):
             l.layer[0].SelfAttention.v = HyperLora(l.layer[0].SelfAttention.v, self.hypernet.down_hypernet, self.hypernet.up_hypernet, 2*i+1)
         for i, l in enumerate(self.model.decoder.block):
             l = l.module if hasattr(l, "module") else l
-            l.layer[0].SelfAttention.q = HyperLora(l.layer[0].SelfAttention.q, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 4*i)
-            l.layer[0].SelfAttention.v = HyperLora(l.layer[0].SelfAttention.v, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 4*i+1)
-            l.layer[1].EncDecAttention.q = HyperLora(l.layer[1].EncDecAttention.q, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 4*i+2)
-            l.layer[1].EncDecAttention.v = HyperLora(l.layer[1].EncDecAttention.v, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 4*i+3)
-            # l.layer[0].SelfAttention.q = HyperLora(l.layer[0].SelfAttention.q, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 2*i)
-            # l.layer[0].SelfAttention.v = HyperLora(l.layer[0].SelfAttention.v, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 2*i+1)
+            l.layer[0].SelfAttention.q = HyperLora(l.layer[0].SelfAttention.q, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 2*i)
+            l.layer[0].SelfAttention.v = HyperLora(l.layer[0].SelfAttention.v, self.decoder_hypernet.down_hypernet, self.decoder_hypernet.up_hypernet, 2*i+1)
+            l.layer[1].EncDecAttention.q = HyperLora(l.layer[1].EncDecAttention.q, self.cross_hypernet.down_hypernet, self.cross_hypernet.up_hypernet, 2*i)
+            l.layer[1].EncDecAttention.v = HyperLora(l.layer[1].EncDecAttention.v, self.cross_hypernet.down_hypernet, self.cross_hypernet.up_hypernet, 2*i+1)
         self.freeze_params()

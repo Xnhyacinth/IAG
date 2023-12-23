@@ -140,7 +140,7 @@ fi
 extra_args="$extra_args --name $name" # --resume_from_checkpoint output/hylora_all_lr1e-3/ckpt/last.ckpt
 echo "name: ${name}"
 echo "default_root_dir: ${default_root_dir}"
-
+export NCCL_P2P_DISABLE=1
 deepspeed --include localhost:$gpus --master_port $MASTER_PORT ${file} \
         --use_checkpoint \
         --accelerator gpu \
