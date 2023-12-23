@@ -170,6 +170,7 @@ deepspeed --include localhost:$gpus --master_port $MASTER_PORT ${file} \
         --alpha_kd 0.5 \
         --temperature 3.0 \
         --save_top_k 1 \
+        --r 256 \
         ${extra_args}
                 # --resume_from_checkpoint None \
         # data/NQ/train.json 
