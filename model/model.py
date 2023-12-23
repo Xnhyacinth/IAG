@@ -422,33 +422,35 @@ class AdapterWrapper(nn.Module):
         pass
 
     def freeze_params(self):
-        # All modules in the
-        # modules_to_freeze = [self.model.encoder.encoder.block[i].layer[0] for i in range(len(self.model.encoder.encoder.block))]
-        # modules_to_freeze = [l.module.layer[0] if hasattr(l, "module") else l.layer[0] for l in self.model.encoder.encoder.block]
-        # # modules_to_freeze.extend([l.module.layer[1] if hasattr(l, "module") else l.layer[1] for l in self.model.encoder.encoder.block])
-        # # And the decoder modules, which has both a SelfAttention (layer[0])
-        # modules_to_freeze.extend([self.model.decoder.block[i].layer[0] for i in range(len(self.model.decoder.block))])
-        # # and CrossAttention (layer[1]) block
-        # modules_to_freeze.extend([self.model.decoder.block[i].layer[1] for i in range(len(self.model.decoder.block))])
-        # # modules_to_freeze.extend([self.model.decoder.block[i].layer[2] for i in range(len(self.model.decoder.block))])
-        # for module in modules_to_freeze:
-        #     for param in module.parameters():
-        #         param.requires_grad = False  # Actual freezing operation
-        for layer in self.model.modules():
-            for _, param in layer.named_parameters():
-                param.requires_grad = False
-        # self.hypernet.pre_down_linear.weight.requires_grad = True
-        # self.hypernet.pre_down_linear.bias.requires_grad = True
-        # self.hypernet.pre_up_linear.weight.requires_grad = True
-        # self.hypernet.pre_up_linear.bias.requires_grad = True
-        # self.hypernet.down_linear.weight.requires_grad = True
-        # self.hypernet.down_linear.bias.requires_grad = True
-        # self.hypernet.up_linear.weight.requires_grad = True
-        # self.hypernet.up_linear.bias.requires_grad = True
-        for layer in self.model.modules():
-            for x, param in layer.named_parameters():
-                if "norm" in x or "emb" in x or "hypernet" in x:
-                    param.requires_grad = True
+        if 'hyperlora' in self.args.name:
+            for layer in self.model.modules():
+                for _, param in layer.named_parameters():
+                    param.requires_grad = False
+            for layer in self.model.modules():
+                for x, param in layer.named_parameters():
+                    if "norm" in x or "emb" in x or "hypernet" in x:
+                        param.requires_grad = True
+        else:
+            # All modules in the
+            # modules_to_freeze = [self.model.encoder.encoder.block[i].layer[0] for i in range(len(self.model.encoder.encoder.block))]
+            modules_to_freeze = [l.module.layer[0] if hasattr(l, "module") else l.layer[0] for l in self.model.encoder.encoder.block]
+            # modules_to_freeze.extend([l.module.layer[1] if hasattr(l, "module") else l.layer[1] for l in self.model.encoder.encoder.block])
+            # And the decoder modules, which has both a SelfAttention (layer[0])
+            modules_to_freeze.extend([self.model.decoder.block[i].layer[0] for i in range(len(self.model.decoder.block))])
+            # and CrossAttention (layer[1]) block
+            modules_to_freeze.extend([self.model.decoder.block[i].layer[1] for i in range(len(self.model.decoder.block))])
+            # modules_to_freeze.extend([self.model.decoder.block[i].layer[2] for i in range(len(self.model.decoder.block))])
+            for module in modules_to_freeze:
+                for param in module.parameters():
+                    param.requires_grad = False  # Actual freezing operation
+            self.hypernet.pre_down_linear.weight.requires_grad = True
+            self.hypernet.pre_down_linear.bias.requires_grad = True
+            self.hypernet.pre_up_linear.weight.requires_grad = True
+            self.hypernet.pre_up_linear.bias.requires_grad = True
+            self.hypernet.down_linear.weight.requires_grad = True
+            self.hypernet.down_linear.bias.requires_grad = True
+            self.hypernet.up_linear.weight.requires_grad = True
+            self.hypernet.up_linear.bias.requires_grad = True
 
     @torch.no_grad()
     def produce_original_embeddings(
@@ -538,8 +540,9 @@ class AdapterWrapper(nn.Module):
 
 
 class T5LoraWrapper(AdapterWrapper):
-    def __init__(self, model, embedding_dim, weights):
+    def __init__(self, model, embedding_dim, weights, args):
         super().__init__(model, embedding_dim, weights)
+        self.args = args
 
     def init_hypernet(self):
         for i, l in enumerate(self.model.encoder.encoder.block):

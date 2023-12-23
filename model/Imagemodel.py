@@ -42,7 +42,7 @@ class ImageModel(nn.Module):
             self.model = get_peft_model(self.model, lora_config)
         elif args.hylora:
             self.model = T5LoraWrapper(
-                self.model, args.lora_rank, args.load_hypernet_weights)
+                self.model, args.lora_rank, args.load_hypernet_weights, args)
         # else:
         #     self.model.set_checkpoint(args.use_checkpoint)
         total_num, trainable_num = self.get_parameter_number(self.model)
