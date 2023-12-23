@@ -27,11 +27,11 @@
 # nohup bash scripts/image.sh 2 6,7 4 1.0 2 15000 hylora kl no gen 1e-3 10 base WQ train all use_context > logs_wq/hylora_kl_notrain_gen_lr1e-3_base_10_all_usecontext.log 2>&1 &
 
 # hylora_kl_base_usecontext_cbqa
-nohup bash scripts/image.sh 2 0,1 2 0.5 8 70000 hyperlora distill no cbqa 1e-4 5 large NQ train all use_context 10 > logs/hyperlora_kl_notrain_cbqa_lr1e-4_large_5_all_use_context_70000_10.log 2>&1 &
+# nohup bash scripts/image.sh 2 0,1 2 0.5 8 70000 hyperlora distill no cbqa 1e-4 5 large NQ train all use_context 10 > logs/hyperlora_kl_notrain_cbqa_lr1e-4_large_5_all_use_context_70000_10.log 2>&1 &
 # sleep 10
-# nohup bash scripts/image.sh 2 2,3 8 0.5 2 100000 hylora kl no cbqa 5e-4 5 base TQA train all use_context > logs_tqa/hylora_distill_notrain_cbqa_lr5e-4_base_5_all_use_context_100000.log 2>&1 &
+# nohup bash scripts/image.sh 2 3,4 2 0.5 8 70000 hyperlora distill no cbqa 1e-4 5 large TQA train all use_context 10 > logs_tqa/hyperlora_distill_notrain_cbqa_lr1e-4_large_5_all_use_context_70000_10.log 2>&1 &
 # sleep 10
-# nohup bash scripts/image.sh 1 2 4 1.0 4 15000 hylora distill no cbqa 1e-4 5 large WQ train all use_context 10 > logs_wq/hylora_ds_notrain_cbqa_lr1e-4_large_5_all_use_context_15000_10.log 2>&1 &
+nohup bash scripts/image.sh 1 5 4 1.0 4 15000 hyperlora kl no cbqa 1e-4 5 large WQ train all use_context 10 > logs_wq/hyperlora_kl_notrain_cbqa_lr1e-4_large_5_all_use_context_15000_10.log 2>&1 &
 
 # hylora_kl_base
 # nohup bash scripts/image.sh 2 6,7 4 2500 2 50000 hylora kl no gen 1e-3 20 base NQ train all no > logs/hylora_kl_notrain_gen_lr1e-3_base_20_all.log 2>&1 &
