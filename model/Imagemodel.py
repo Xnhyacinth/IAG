@@ -31,7 +31,7 @@ class ImageModel(nn.Module):
         if args.lora:
             # Define LoRA Config
             lora_config = LoraConfig(
-                r=16,
+                r=args.r,
                 lora_alpha=32,
                 target_modules=["q", "v"],
                 lora_dropout=0.05,
@@ -95,8 +95,10 @@ class ImageLitModel(pl.LightningModule):
         parser.add_argument('--hylora', action='store_true',
                             help='hylora or not')
         parser.add_argument('--lora', action='store_true', help='lora or not')
-        parser.add_argument("--lora_rank", type=int,
+        parser.add_argument("--r", type=int,
                             default=16, help='rank of lora')
+        parser.add_argument("--lora_rank", type=int,
+                            default=16, help='rank of image network')
         parser.add_argument("--load_hypernet_weights", type=int, default=None,
                             help='Path to hypernet weights, otherwise random init')
         parser.add_argument(
