@@ -119,7 +119,7 @@ if [ "$train" = "test" ];then
   file=test.py
   # load_checkpoints_path="output/fid_cbqa_lr1e-3_hg_ctxs1/ckpt/epoch=19-step=49006-val_em=25.16.ckpt"
   # load_checkpoints_path="output_tqa/hylora_kl_hg_ctxs5_gen_lr1e-3_base_usecontext_alllayers_100/ckpt/epoch=7-step=36975-val_em=61.21.ckpt"
-  load_checkpoints_path="output_NQ/hylora_hg_ctxs5_cbqa_lr1e-3_base_usecontext_alllayers_100/ckpt/epoch=19-step=48243-val_em=22.45.ckpt"
+  load_checkpoints_path="output_NQ/hylora_kl_hg_ctxs5_cbqa_lr1e-3_base_usecontext_alllayers_100/ckpt/epoch=24-step=61850-val_em=24.63.ckpt"
   # load_checkpoints_path="output_WQ/hylora_kl_hg_ctxs5_cbqa_lr1e-3_base_alllayers_100/ckpt/epoch=28-step=6322-val_em=31.67.ckpt"
   # load_checkpoints_path="output_TQA/hylora_kl_hg_ctxs5_cbqa_lr1e-3_base_usecontext_alllayers_100/ckpt/epoch=17-step=88649-val_em=21.72.ckpt"
   default_root_dir="output_test_${model_dataset}"

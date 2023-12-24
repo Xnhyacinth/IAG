@@ -4,6 +4,11 @@
  # @Author: Xnhyacinth, Xnhyacinth@qq.com
  # @Date: 2023-12-23 02:00:10
 ### 
+# nohup bash scripts/image.sh 1 4 2 0.5 8 70000 hyperlora kl no cbqa 1e-3 5 base NQ train all use_context 10 32 > logs/hyperlora_kl_notrain_cbqa_lr1e-3_base_5_all_use_context_70000_10_r32.log 2>&1 &
+
+nohup bash scripts/image.sh 1 5 2 1.0 8 70000 hyperlora kl no cbqa 1e-3 5 base WQ train all use_context 10 32 > logs_wq/hyperlora_kl_notrain_cbqa_lr1e-3_base_5_all_use_context_70000_10_r32.log 2>&1 &
+
+
 
 # hylora_all_base
 # nohup bash scripts/image.sh 2 2,3 4 1000 2 50000 hylora all no gen 1e-3 10 base NQ train all > logs/hylora_all_notrain_gen_lr1e-3_base_10_alllayers.log 2>&1 &
@@ -27,7 +32,7 @@
 # nohup bash scripts/image.sh 2 6,7 4 1.0 2 15000 hylora kl no gen 1e-3 10 base WQ train all use_context > logs_wq/hylora_kl_notrain_gen_lr1e-3_base_10_all_usecontext.log 2>&1 &
 
 # hylora_kl_base_usecontext_cbqa
-nohup bash scripts/image.sh 1 6 4 0.5 8 70000 hyperlora all no cbqa 1e-3 5 base NQ train all use_context 10 128 > logs/hyperlora_all_notrain_cbqa_lr1e-3_base_5_all_use_context_70000_10_r128.log 2>&1 &
+# nohup bash scripts/image.sh 1 4 4 0.5 8 70000 hyperlora kl no cbqa 1e-3 5 base NQ train all use_context 10 32 > logs/hyperlora_kl_notrain_cbqa_lr1e-3_base_5_all_use_context_70000_10_r32.log 2>&1 &
 # sleep 10
 # nohup bash scripts/image.sh 1 6 4 0.5 8 70000 hyperlora all no cbqa 1e-3 5 base TQA train all use_context 10 128 > logs_tqa/hyperlora_all_notrain_cbqa_lr1e-3_base_5_all_use_context_70000_10_r128.log 2>&1 &
 # sleep 10

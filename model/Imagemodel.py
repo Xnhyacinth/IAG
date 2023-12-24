@@ -30,20 +30,35 @@ class ImageModel(nn.Module):
         self.model.load_t5(model.state_dict())
         if args.lora:
             # Define LoRA Config
-            lora_config = LoraConfig(
-                r=args.r,
-                lora_alpha=32,
-                target_modules=["q", "v"],
-                lora_dropout=0.05,
-                bias="none",
-                task_type=TaskType.SEQ_2_SEQ_LM
-            )
+            if 'hyfn' in args.name:
+                lora_config = LoraConfig(
+                    r=args.r,
+                    lora_alpha=32,
+                    target_modules=["q", "v", "wi", "wo"],
+                    lora_dropout=0.05,
+                    bias="none",
+                    task_type=TaskType.SEQ_2_SEQ_LM
+                )
+            else:
+                lora_config = LoraConfig(
+                    r=args.r,
+                    lora_alpha=32,
+                    target_modules=["q", "v"],
+                    lora_dropout=0.05,
+                    bias="none",
+                    task_type=TaskType.SEQ_2_SEQ_LM
+                )
             # add LoRA adaptor
             self.model = get_peft_model(self.model, lora_config)
             for layer in self.model.modules():
                 for x, param in layer.named_parameters():
                     if "norm" in x or "emb" in x:
                         param.requires_grad = True
+            if 'ffn' in self.args.name:
+                for layer in self.model.modules():
+                    for x, param in layer.named_parameters():
+                        if "wi" in x or "wo" in x:
+                            param.requires_grad = True
         elif args.hylora:
             self.model = T5LoraWrapper(
                 self.model, args.lora_rank, args.load_hypernet_weights, args)
