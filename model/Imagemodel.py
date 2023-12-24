@@ -54,7 +54,7 @@ class ImageModel(nn.Module):
                 for x, param in layer.named_parameters():
                     if "norm" in x or "emb" in x:
                         param.requires_grad = True
-            if 'ffn' in self.args.name:
+            if 'ffn' in args.name:
                 for layer in self.model.modules():
                     for x, param in layer.named_parameters():
                         if "wi" in x or "wo" in x:
