@@ -9,8 +9,8 @@
 # nohup bash scripts/image.sh 1 5 2 1.0 8 15000 hyperlora kl no cbqa 1e-3 5 base WQ train all use_context 10 32 > logs_wq/hyperlora_kl_notrain_cbqa_lr1e-3_base_5_all_use_context_70000_10_r32.log 2>&1 &
 
 nohup bash scripts/image.sh 1 6 2 1.0 8 15000 hyperlora_hyfn kl no cbqa 1e-3 5 base WQ train all use_context 10 32 > logs_wq/hyperlora_hyfn_kl_notrain_cbqa_lr1e-3_base_5_all_use_context_70000_10_r32.log 2>&1 &
-sleep 10
-nohup bash scripts/image.sh 1 7 2 1.0 8 15000 hyperlora_ffn kl no cbqa 1e-3 5 base WQ train all use_context 10 32 > logs_wq/hyperlora_ffn_kl_notrain_cbqa_lr1e-3_base_5_all_use_context_70000_10_r32.log 2>&1 &
+# sleep 10
+# nohup bash scripts/image.sh 1 7 2 1.0 8 15000 hyperlora_ffn kl no cbqa 1e-3 5 base WQ train all use_context 10 32 > logs_wq/hyperlora_ffn_kl_notrain_cbqa_lr1e-3_base_5_all_use_context_70000_10_r32.log 2>&1 &
 
 # hylora_all_base
 # nohup bash scripts/image.sh 2 2,3 4 1000 2 50000 hylora all no gen 1e-3 10 base NQ train all > logs/hylora_all_notrain_gen_lr1e-3_base_10_alllayers.log 2>&1 &

@@ -408,9 +408,9 @@ class AdapterWrapper(nn.Module):
         
         if 'hyfn' in self.args.name:
             self.ffn_en_hypernet = HyperNet(
-                self.encoding_dim, input_dim, self.embedding_dim * 2, down_dim)
+                self.encoding_dim, input_dim, self.embedding_dim * 4, down_dim * 4)
             self.ffn_de_hypernet = HyperNet(
-                self.encoding_dim, input_dim, self.embedding_dim * 2, down_dim)
+                self.encoding_dim, input_dim, self.embedding_dim * 4, down_dim * 4)
         
         if weights is not None:
             self.hypernet.load_state_dict(torch.load(
