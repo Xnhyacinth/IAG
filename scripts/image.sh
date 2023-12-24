@@ -50,10 +50,22 @@ context_maxlength=512
 if [ "$name" = "lora" ];then
   extra_args="--lora"
 fi
+if [ "$name" = "lora_hyfn" ];then
+  extra_args="--lora"
+fi
+if [ "$name" = "lora_ffn" ];then
+  extra_args="--lora"
+fi
 if [ "$name" = "hylora" ];then
   extra_args="--hylora"
 fi
 if [ "$name" = "hyperlora" ];then
+  extra_args="--hylora"
+fi
+if [ "$name" = "hyperlora_hyfn" ];then
+  extra_args="--hylora"
+fi
+if [ "$name" = "hyperlora_ffn" ];then
   extra_args="--hylora"
 fi
 if [ "$distill" = "distill" ];then
