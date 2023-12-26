@@ -2,18 +2,26 @@
 # bash scripts/image.sh 1 0 4 1.0 2 50000 hylora kl no gen 1e-3 5 base WQ test all use_context 10 yes TQA
 # bash scripts/image.sh 1 1 4 1.0 16 50000 hylora kl no cbqa 1e-3 5 base TQA test all use_context 10 no WQ
 
-x=4
-dataset=NQ
+x=2
+dataset=TQA
 m=hylora
 ds=kl
-for d in NQ TQA
-    do
-        nohup bash scripts/image.sh 1 ${x} 4 1.0 16 50000 ${m} ${ds} no cbqa 1e-3 5 base ${d} test all use_context 1 16 no ${dataset} > logs_test/${m}_${ds}_train${dataset}_${d}.log 2>&1 &
-        sleep 10
-        echo ${x}
-        let x+=1
-    done
+# for d in NQ TQA
+#     do
+#         nohup bash scripts/image.sh 1 ${x} 4 1.0 16 50000 ${m} ${ds} no cbqa 1e-3 5 base ${d} test all use_context 1 16 no ${dataset} > logs_test/${m}_${ds}_train${dataset}_${d}.log 2>&1 &
+#         sleep 10
+#         echo ${x}
+#         let x+=1
+#     done
+# d=WQ
+d=NQ
+nohup bash scripts/image.sh 1 ${x} 4 1.0 32 50000 ${m} ${ds} no cbqa 5e-4 5 base ${d} test all use_context 1 16 no ${dataset} > logs_test/${m}_${ds}_train${dataset}_${d}.log 2>&1 &
+d=TQA
+x=3
+sleep 10
+nohup bash scripts/image.sh 1 ${x} 4 1.0 32 50000 ${m} ${ds} no cbqa 5e-4 5 base ${d} test all use_context 1 16 no ${dataset} > logs_test/${m}_${ds}_train${dataset}_${d}.log 2>&1 &
 d=WQ
-x=0
-nohup bash scripts/image.sh 1 ${x} 4 1.0 4 50000 ${m} ${ds} no cbqa 1e-3 5 base ${d} test all use_context 1 16 no ${dataset} > logs_test/${m}_${ds}_train${dataset}_${d}.log 2>&1 &
+x=7
+sleep 10
+nohup bash scripts/image.sh 1 ${x} 4 1.0 16 50000 ${m} ${ds} no cbqa 5e-4 5 base ${d} test all use_context 1 16 no ${dataset} > logs_test/${m}_${ds}_train${dataset}_${d}.log 2>&1 &
 # bash scripts/image.sh 1 1 4 1.0 16 50000 hylora kl no cbqa 1e-3 5 base TQA test all no 1 no NQ

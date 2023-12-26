@@ -22,6 +22,7 @@ class ImageDataset(Dataset):
     def __init__(self,
         data,
         n_context=None,
+        args=None,
         question_prefix='question:',
         title_prefix='title:',
         passage_prefix='context:'):
@@ -32,6 +33,7 @@ class ImageDataset(Dataset):
         self.question_prefix = question_prefix
         self.title_prefix = title_prefix
         self.passage_prefix = passage_prefix
+        self.args=args
         self.sort_data()
         
     def __len__(self):
@@ -66,7 +68,7 @@ class ImageDataset(Dataset):
             'question': question,
             'target': target,
             'passages': passages,
-            'context': example['context']['compressed_prompt'][194:],
+            'context': example['context']['compressed_prompt'][204:] if 'NQ' in self.args.default_root_dir and self.args.n_c == 5 else example['context']['compressed_prompt'][194:],
             'features': example['features'],
             'answers': example['answers']
         }
@@ -105,16 +107,16 @@ class ImageDataModel(pl.LightningDataModule):
         self.args = args
         self.tokenizer = tokenizer
         if dataset is None:
-            self.train_data = ImageDataset(train_data, args.n_context)
-            self.valid_data = ImageDataset(val_data, args.n_context)
-            self.test_data = ImageDataset(test_data, args.n_context)
+            self.train_data = ImageDataset(train_data, args.n_context, args)
+            self.valid_data = ImageDataset(val_data, args.n_context, args)
+            self.test_data = ImageDataset(test_data, args.n_context, args)
         else:
             if 'test' not in args.name:
-                self.train_data = ImageDataset(dataset['train'], args.n_context)
-                self.valid_data = ImageDataset(dataset['eval'], args.n_context)
-                self.test_data = ImageDataset(dataset['test'], args.n_context)
+                self.train_data = ImageDataset(dataset['train'], args.n_context, args)
+                self.valid_data = ImageDataset(dataset['eval'], args.n_context, args)
+                self.test_data = ImageDataset(dataset['test'], args.n_context, args)
             else:
-                self.test_data = ImageDataset(dataset, args.n_context)
+                self.test_data = ImageDataset(dataset, args.n_context, args)
             
 
     def train_dataloader(self):
