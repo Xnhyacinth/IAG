@@ -207,6 +207,10 @@ class ImageLitModel(pl.LightningModule):
             if self.args.load_checkpoints_path == "":
                 del self.model.encoder
             print('Total training step:', self.total_step)
+        if stage == 'test':
+            if self.args.do_distill:
+                del self.t_model
+            self.model.eval()
 
     # kd loss
     def cal_loss(self, s_logits, t_logits, temperature):

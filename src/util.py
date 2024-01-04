@@ -13,9 +13,28 @@ import json
 from pathlib import Path
 import torch.distributed as dist
 import csv
+from datasets import load_from_disk
 
 
 logger = logging.getLogger(__name__)
+
+
+def load_data(args, datapath):
+    with open(args.output_dir / 'logging.txt', 'a+') as f:
+        f.write(
+            f'load data from {datapath}, use compressed_ctxs_{args.n_c}\n')
+        f.close()
+    dataset = load_from_disk(datapath)
+    if 'TQA' in datapath:
+        dataset = dataset.select_columns(
+            ['id', 'question', 'answers', 'target', f'compressed_ctxs_{args.n_c}', 'ctxs'])
+    else:
+        dataset = dataset.select_columns(
+            ['id', 'question', 'answers', f'compressed_ctxs_{args.n_c}', 'ctxs'])
+    dataset = dataset.rename_column(
+        f'compressed_ctxs_{args.n_c}', 'context')
+    return dataset
+
 
 def init_logger(is_main=True, is_distributed=False, filename=None):
     if is_distributed:

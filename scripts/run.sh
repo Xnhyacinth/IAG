@@ -4,23 +4,32 @@
  # @Author: Xnhyacinth, Xnhyacinth@qq.com
  # @Date: 2023-12-23 02:00:10
 ### 
-nohup bash scripts/image.sh 1 4 2 0.5 8 40000 hyperlora_ffn kl no cbqa 5e-4 5 base NQ train all use_context 10 32 > logs/hyperlora_ffn_kl_notrain_cbqa_lr5e-4_base_5_all_use_context_70000_10_r32.log 2>&1 &
-sleep 10
-nohup bash scripts/image.sh 1 5 2 0.5 8 30000 lora_ffn kl no cbqa 5e-4 5 base NQ train all use_context 10 32 > logs/lora_ffn_kl_notrain_cbqa_lr5e-4_base_5_all_use_context_70000_10_r32.log 2>&1 &
-sleep 10
-nohup bash scripts/image.sh 1 6 2 0.5 8 20000 lora_ffn kl no cbqa 1e-3 5 base TQA train all use_context 10 32 > logs_tqa/lora_ffn_kl_notrain_cbqa_lr1e-3_base_5_all_use_context_65000_10_r32.log 2>&1 &
-sleep 10
-nohup bash scripts/image.sh 1 7 2 0.5 8 25000 hyperlora_ffn no no cbqa 1e-3 5 base TQA train all use_context 10 32 > logs_tqa/hyperlora_ffn_no_notrain_cbqa_lr1e-3_base_5_all_use_context_65000_10_r32.log 2>&1 &
-sleep 10
-nohup bash scripts/image.sh 1 0 1 0.5 16 25000 hyperlora no no cbqa 1e-3 5 base TQA train all use_context 10 32 > logs_tqa/hyperlora_no_notrain_cbqa_lr1e-3_base_5_all_use_context_80000_10_r32.log 2>&1 &
-sleep 10
-nohup bash scripts/image.sh 1 1 1 0.5 16 40000 hyperlora_ffn no no cbqa 5e-4 5 base NQ train all use_context 10 32 > logs/hyperlora_ffn_no_notrain_cbqa_lr5e-4_base_5_all_use_context_70000_10_r32.log 2>&1 &
-sleep 10
-nohup bash scripts/image.sh 1 2 2 0.5 8 70000 lora kl no cbqa 5e-4 5 base NQ train all use_context 10 32 > logs/lora_kl_notrain_cbqa_lr5e-4_base_5_all_use_context_70000_10_r32.log 2>&1 &
-sleep 10
-nohup bash scripts/image.sh 1 3 2 0.5 8 70000 hyperlora kl no cbqa 5e-4 5 base NQ train all use_context 10 32 > logs/lora_kl_notrain_cbqa_lr5e-4_base_5_all_use_context_70000_10_r32.log 2>&1 &
-# 2,3 tqa kl 5e-4
 
+# nohup bash scripts/image.sh 1 1 8 0.5 2 50000 lora_ffn no no gen 1e-4 5 large NQ train all use_context 10 32 > logs/lora_ffn_no_notrain_gen_lr1e-4_large_5_all_use_context_50000_10_r32.log 2>&1 &
+nohup bash scripts/image.sh 1 2 8 0.5 2 50000 lora_ffn no no gen 1e-4 5 large TQA train all use_context 10 32 > logs_tqa/lora_ffn_no_notrain_gen_lr1e-4_large_5_all_use_context_50000_10_r32.log 2>&1 &
+sleep 10
+nohup bash scripts/image.sh 1 3 8 1.0 2 15000 lora_ffn no no gen 1e-4 5 large WQ train all use_context 10 32 > logs_wq/lora_ffn_no_notrain_gen_lr1e-4_large_5_all_use_context_50000_10_r32.log 2>&1 &
+
+# sleep 10
+# nohup bash scripts/image.sh 1 4 2 0.5 8 80000 hyperlora_ffn kl no gen 1e-3 5 base NQ train all use_context 10 32 > logs/hyperlora_ffn_kl_notrain_gen_lr1e-3_base_5_all_use_context_80000_10_r32.log 2>&1 &
+# nohup bash scripts/image.sh 1 4 2 0.5 8 40000 fid no no cbqa 1e-3 5 base NQ train all use_context 10 32 > logs/fid_no_notrain_cbqa_lr1e-3_base_5_all_use_context_40000_10_r32.log 2>&1 &
+# nohup bash scripts/image.sh 1 4 8 0.5 2 50000 hyperlora_ffn kl no fid 1e-3 5 base NQ train all use_context 10 32 > logs/hyperlora_ffn_kl_notrain_fid_lr1e-3_base_5_all_use_context_50000_10_r32.log 2>&1 &
+
+
+
+# nohup bash scripts/image.sh 1 1 8 0.5 2 80000 hyperlora_ffn no no cbqa 1e-4 5 large TQA train all use_context 10 32 > logs_tqa/hyperlora_ffn_no_notrain_cbqa_lr1e-4_large_5_all_use_context_70000_10_r32.log 2>&1 &
+# sleep 10
+# nohup bash scripts/image.sh 1 6 8 0.5 2 80000 hyperlora_ffn no no cbqa 1e-4 5 large NQ train all use_context 10 32 > logs/hyperlora_ffn_no_notrain_cbqa_lr1e-4_large_5_all_use_context_70000_10_r32.log 2>&1 &
+# sleep 10
+# nohup bash scripts/image.sh 1 7 8 0.5 2 80000 lora_ffn no no cbqa 1e-4 5 large NQ train all use_context 10 32 > logs/lora_ffn_no_notrain_cbqa_lr1e-4_large_5_all_use_context_70000_10_r32.log 2>&1 &
+# sleep 10
+# nohup bash scripts/image.sh 1 3 8 0.5 2 80000 hyperlora no no cbqa 1e-4 5 large TQA train all use_context 10 32 > logs_tqa/hyperlora_no_notrain_cbqa_lr1e-4_large_5_all_use_context_70000_10_r32.log 2>&1 &
+# sleep 10
+# nohup bash scripts/image.sh 1 2 8 0.5 2 80000 hyperlora no no cbqa 1e-4 5 large NQ train all use_context 10 32 > logs/hyperlora_no_notrain_cbqa_lr1e-4_large_5_all_use_context_70000_10_r32.log 2>&1 &
+# sleep 10
+# nohup bash scripts/image.sh 1 5 8 0.5 2 80000 lora no no cbqa 1e-4 5 large NQ train all use_context 10 32 > logs/lora_no_notrain_cbqa_lr1e-4_large_5_all_use_context_70000_10_r32.log 2>&1 &
+# sleep 10
+# nohup bash scripts/image.sh 1 0 8 0.5 2 80000 hyperlora kl no cbqa 5e-4 5 large NQ train all use_context 10 32 > logs/hyperlora_kl_notrain_cbqa_lr5e-4_large_5_all_use_context_70000_10_r32.log 2>&1 &
 
 
 # hylora_all_base

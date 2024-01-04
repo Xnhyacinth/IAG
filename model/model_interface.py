@@ -29,6 +29,7 @@ from data.data_interface import ImageDataModel
 import json
 import numpy as np
 from datasets import load_dataset, load_from_disk, DatasetDict, Dataset
+from src.util import load_data
 
 
 class MInterface(pl.LightningModule):
@@ -192,25 +193,26 @@ class MInterface(pl.LightningModule):
 
     def train(self):
         if self.args.n_c != 0:
-            with open(self.args.output_dir / 'logging.txt', 'a+') as f:
-                f.write(
-                    f'load data from {self.args.hg_datapath}, use compressed_ctxs_{self.args.n_c}\n')
-                f.close()
-            # dataset = load_dataset(self.args.hg_datapath)
-            dataset = load_from_disk(self.args.hg_datapath)
-            if 'TQA' in self.args.hg_datapath:
-                # dataset = load_from_disk('dataset/Image/TQA')
-                dataset = dataset.select_columns(
-                    ['id', 'question', 'answers', 'target', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
-            else:
-                # dataset = load_from_disk('dataset/Image/NQ')
-                dataset = dataset.select_columns(
-                    ['id', 'question', 'answers', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
-            # dataset['train'] = dataset['train'].select(range(1456))
-            # dataset['eval'] = dataset['eval'].select(range(223))
-            # dataset['test'] = dataset['test'].select(range(878))
-            dataset = dataset.rename_column(
-                f'compressed_ctxs_{self.args.n_c}', 'context')
+            dataset = load_data(self.args, self.args.hg_datapath)
+            # with open(self.args.output_dir / 'logging.txt', 'a+') as f:
+            #     f.write(
+            #         f'load data from {self.args.hg_datapath}, use compressed_ctxs_{self.args.n_c}\n')
+            #     f.close()
+            # # dataset = load_dataset(self.args.hg_datapath)
+            # dataset = load_from_disk(self.args.hg_datapath)
+            # if 'TQA' in self.args.hg_datapath:
+            #     # dataset = load_from_disk('dataset/Image/TQA')
+            #     dataset = dataset.select_columns(
+            #         ['id', 'question', 'answers', 'target', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
+            # else:
+            #     # dataset = load_from_disk('dataset/Image/NQ')
+            #     dataset = dataset.select_columns(
+            #         ['id', 'question', 'answers', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
+            # # dataset['train'] = dataset['train'].select(range(1456))
+            # # dataset['eval'] = dataset['eval'].select(range(223))
+            # # dataset['test'] = dataset['test'].select(range(878))
+            # dataset = dataset.rename_column(
+            #     f'compressed_ctxs_{self.args.n_c}', 'context')
             # dataset['context'] = dataset['context']['compressed_prompt']
             # dataset = dataset.map(self.get_features, batched=True, batch_size=2048, desc="Features for Input")
             # dataset = self.load_features(dataset, self.args.hg_datapath)
@@ -242,27 +244,28 @@ class MInterface(pl.LightningModule):
 
     def test(self, model=None, data=None):
         if data is not None:
-            with open(self.args.output_dir / 'logging.txt', 'a+') as f:
-                f.write(
-                    f'load data from {data}, use compressed_ctxs_{self.args.n_c}\n')
-                f.close()
-            # dataset = load_dataset(self.args.hg_datapath)
-            dataset = load_from_disk(f'{data}/test')
-            if 'TQA' in data:
-                dataset = dataset.select_columns(
-                    ['id', 'question', 'answers', 'target', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
-            else:
-                dataset = dataset.select_columns(
-                    ['id', 'question', 'answers', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
-            dataset = dataset.rename_column(
-                f'compressed_ctxs_{self.args.n_c}', 'context')
+            # with open(self.args.output_dir / 'logging.txt', 'a+') as f:
+            #     f.write(
+            #         f'load data from {data}, use compressed_ctxs_{self.args.n_c}\n')
+            #     f.close()
+            # # dataset = load_dataset(self.args.hg_datapath)
+            # dataset = load_from_disk(f'{data}/test')
+            # if 'TQA' in data:
+            #     dataset = dataset.select_columns(
+            #         ['id', 'question', 'answers', 'target', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
+            # else:
+            #     dataset = dataset.select_columns(
+            #         ['id', 'question', 'answers', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
+            # dataset = dataset.rename_column(
+            #     f'compressed_ctxs_{self.args.n_c}', 'context')
+            dataset = load_data(self.args, data)
             dataset = self.load_features(dataset, data)
             print(dataset)
             self.data_model = ImageDataModel(
                 self.tokenizer, self.args, dataset=dataset)
+        start_time = time.time()
         if model is not None:
             self.trainer.test(model, self.data_model)
-        start_time = time.time()
         self.trainer.test(self.model, self.data_model)
         with open(self.args.output_dir / 'logging.txt', 'a+') as f:
             f.write(f'Time: {time.time() - start_time:.1f}s & {(time.time() - start_time)//60}min {(time.time() - start_time)%60:.1f}s\n')

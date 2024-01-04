@@ -9,12 +9,24 @@ from pathlib import Path
 from copy import deepcopy
 import torch
 import os
+import numpy as np
+import random
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 os.environ['CURL_CA_BUNDLE'] = ''
+
+def seed_everything(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    torch.cuda.manual_seed_all(seed)
 
 def main(opt):
     # set seed
     pl.seed_everything(opt.seed)
+    # seed_everything(opt.seed)
     
     checkpoint_path = Path(opt.default_root_dir) / opt.name
     checkpoint_path.mkdir(parents=True, exist_ok=True)
