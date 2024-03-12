@@ -1,9 +1,3 @@
-# Copyright (c) 2023 Huanxuan Liao
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-
 import pytorch_lightning as pl
 from torch import nn
 import torch
@@ -72,7 +66,7 @@ class ImageModel(nn.Module):
     def get_parameter_number(self, model):
         total_num = sum(p.numel() for p in model.parameters())
         trainable_num = sum(p.numel() for p in model.parameters() if p.requires_grad)
-        return total_num/1e6, trainable_num/1e6
+        return total_num/2**20, trainable_num/2**20
 
         
     def forward(self, input_ids, attention_mask, labels, features=None, **kwargs):

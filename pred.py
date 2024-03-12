@@ -186,7 +186,7 @@ def load_model_and_tokenizer(path, model_name, num_gpus, max_memory_per_gpu=None
     if "chatglm" not in model_name:
         tokenizer.pad_token = tokenizer.eos_token
     model = model.eval()
-    print(model)
+    # print(model)
     return model, tokenizer
 
 def main(

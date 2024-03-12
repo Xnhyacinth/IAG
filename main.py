@@ -1,6 +1,3 @@
-# Copyright 2023 Huanxuan Liao
-# Contact: huanxuanliao@gmail.com
-
 import pytorch_lightning as pl
 from argparse import ArgumentParser
 from src import util, slurm

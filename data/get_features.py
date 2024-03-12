@@ -1,9 +1,3 @@
-# Copyright (c) 2023 Huanxuan Liao
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-
 from transformers import BertTokenizer, AutoTokenizer, AutoModel
 import json 
 import torch
@@ -95,14 +89,15 @@ parser.add_argument("--d", type=str, default='train')
 parser.add_argument("--num", type=int, default=0)
 parser.add_argument("--cuda", type=int, default=0)
 opt = parser.parse_args()
-checkpoint_path = Path(f"features/{opt.dataset}/context-{opt.num}")
+checkpoint_path = Path(f"llama2/features/{opt.dataset}/context-{opt.num}")
 checkpoint_path.mkdir(parents=True, exist_ok=True)
 # data = load_data_compress(f"{opt.datapath}/{opt.dataset}/{opt.d}.json")
 dataset = load_from_disk(f'dataset/Image/{opt.dataset}')
-model_path = "t5-base"
+model_path = "models/llama2/7b"
 tokenizer = AutoTokenizer.from_pretrained(model_path)
+tokenizer.pad_token = tokenizer.eos_token
 # model = Simcsewrap(model_path_simcse_roberta, 255).cuda()
-model = AutoModel.from_pretrained(model_path).to(f'cuda:0')
+model = AutoModel.from_pretrained(model_path, device_map='auto', torch_dtype=torch.bfloat16)
 # for d in tqdm(data, desc='Length'):
 for split in ["train", "eval", "test"]:
     new_data = []
@@ -125,7 +120,7 @@ for split in ["train", "eval", "test"]:
                             max_length=512,
                             padding='max_length',
                             truncation='longest_first',
-                            return_tensors="pt").to(f'cuda:0')
+                            return_tensors="pt").to(model.device)
         with torch.no_grad():
             embeddings = model.encoder(input_ids=inputs['input_ids'], attention_mask=inputs['attention_mask'], return_dict=True)
         pooled_sentence = embeddings.last_hidden_state # shape is [batch_size, seq_len, hidden_size]

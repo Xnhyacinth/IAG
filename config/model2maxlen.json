@@ -1,5 +1,6 @@
 {
     "llama2-7b-chat-4k": 3500,
+    "llama2-7b-4k": 3500,
     "longchat-v1.5-7b-32k": 31500,
     "xgen-7b-8k": 7500,
     "internlm-7b-8k": 7500,
@@ -8,5 +9,6 @@
     "vicuna-v1.5-7b-16k": 15500,
     "openbuddy-llama-7b-v4-fp16": 3500,
     "llama2-7b": 3500,
+    "llama2-13b": 3500,
     "llama2-7b-chat": 3500
 }

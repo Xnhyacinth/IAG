@@ -1,14 +1,10 @@
-'''
-Copyright (c) 2023 by Huanxuan Liao, huanxuanliao@gmail.com, All Rights Reserved. 
-Author: Xnhyacinth, Xnhyacinth@qq.com
-Date: 2023-12-23 02:04:18
-'''
 from datasets import load_dataset
 import transformers
 import datasets 
+import torch
 config = datasets.DownloadConfig(resume_download=True, max_retries=100) 
 
-dataset = datasets.load_from_disk(f'dataset/Image/NQ/test')
+# dataset = datasets.load_from_disk(f'dataset/Image/NQ/test')
 # print(dataset['compressed_ctxs_5'][0]['compressed_prompt'][204:])
 # dataset = datasets.load_dataset( "codeparrot/self-instruct-starcoder", cache_dir="./hf_cache", download_config=config)
 # data = load_dataset("Xnhyacinth/Image", 'WQ', download_config=config)
@@ -27,3 +23,9 @@ dataset = datasets.load_from_disk(f'dataset/Image/NQ/test')
 #             't5-large', resume_download=True
 #         )
 # print(a.config.d_model)
+a = transformers.AutoModelForCausalLM.from_pretrained(
+    'models/llama2/7b',
+    torch_dtype=torch.float16,
+    device_map='auto'
+)
+print(a.model.layers)

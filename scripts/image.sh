@@ -131,9 +131,9 @@ if [ "$train" = "test" ];then
   file=test.py
   # load_checkpoints_path="output/fid_cbqa_lr1e-3_hg_ctxs1/ckpt/epoch=19-step=49006-val_em=25.16.ckpt"
   # load_checkpoints_path="output_tqa/hylora_kl_hg_ctxs5_gen_lr1e-3_base_usecontext_alllayers_100/ckpt/epoch=7-step=36975-val_em=61.21.ckpt"
-  load_checkpoints_path="output_NQ/fid_hg_ctxs5_cbqa_lr1e-3_base_alllayers_5/ckpt/epoch=14-step=37110-val_em=24.47.ckpt"
-  # load_checkpoints_path="output_WQ/hyperlora_hg_ctxs5_cbqa_lr1e-3_base_rank32_usecontext_alllayers_10/ckpt/epoch=36-step=8066-val_em=23.68.ckpt"
-  # load_checkpoints_path="output_TQA/hyperlora_hg_ctxs5_cbqa_lr1e-3_base_rank32_usecontext_alllayers_10/ckpt/epoch=2-step=14774-val_em=7.23.ckpt"
+  load_checkpoints_path="output_NQ/lora_ffn_hg_ctxs5_gen_lr1e-4_large_rank32_usecontext_alllayers_10/ckpt/epoch=8-step=44532-val_em=42.00.ckpt"
+  # load_checkpoints_path="output_WQ/lora_ffn_hg_ctxs5_gen_lr1e-4_base_rank32_usecontext_alllayers_10/ckpt/epoch=15-step=1744-val_em=52.63.ckpt"
+  # load_checkpoints_path="output_TQA/lora_ffn_hg_ctxs5_gen_lr1e-4_base_rank32_usecontext_alllayers_10/ckpt/epoch=9-step=23398-val_em=64.01.ckpt"
   default_root_dir="output_test_${model_dataset}"
   name="${name}_test_${dataset}"
   extra_args="$extra_args --load_checkpoints_path $load_checkpoints_path"

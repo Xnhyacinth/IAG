@@ -1,5 +1,7 @@
 {
-    "llama2-7b-chat-4k": "/data/liaohuanxuan/program/models/llama2/7b-chat",
+    "llama2-7b-chat-4k": "/home/shizhu/liaohuanxuan/pl/models/llama2/7b-chat",
+    "llama2-7b-4k": "/home/shizhu/liaohuanxuan/pl/models/llama2/7b",
+    "llama2-13b": "/home/shizhu/liaohuanxuan/pl/models/llama2/13b",
     "longchat-v1.5-7b-32k": "lmsys/longchat-7b-v1.5-32k",
     "longchat-13b-16k": "lmsys/longchat-13b-16k",
     "xgen-7b-8k": "Salesforce/xgen-7b-8k-inst",

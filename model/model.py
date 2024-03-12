@@ -1,9 +1,3 @@
-# Copyright (c) Facebook, Inc. and its affiliates.
-# All rights reserved.
-#
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-
 import types
 import torch
 import transformers
@@ -385,7 +379,7 @@ class AdapterWrapper(nn.Module):
     Each child class needs to implement the init hypernet method that injects hypernet weights
     """
 
-    def __init__(self, model, embedding_dim, weights, args):
+    def __init__(self, model, embedding_dim, weights, args=None):
         super(AdapterWrapper, self).__init__()
         self.model = model
         self.down_hypernet = None
@@ -393,37 +387,48 @@ class AdapterWrapper(nn.Module):
         self.embedding_dim = embedding_dim
         self.encoding_dim = 255
         self.args = args
-        down_dim = model.config.d_kv * model.config.num_heads
-        input_dim = model.config.d_model
+        if 'llama' in model.config.model_type:
+            print('llama')
+            self.get_llama_hypernet()
+        else:
+            down_dim = model.config.d_kv * model.config.num_heads
+            input_dim = model.config.d_model
 
-        self.hypernet = HyperNet(
-            self.encoding_dim, input_dim, self.embedding_dim, down_dim)
-
-        if 'hyperlora' in self.args.name:
-            self.decoder_hypernet = HyperNet(
+            self.hypernet = HyperNet(
                 self.encoding_dim, input_dim, self.embedding_dim, down_dim)
+
+            if 'hyperlora' in self.args.name:
+                self.decoder_hypernet = HyperNet(
+                    self.encoding_dim, input_dim, self.embedding_dim, down_dim)
+                
+                self.cross_hypernet = HyperNet(
+                    self.encoding_dim, input_dim, self.embedding_dim, down_dim)
             
-            self.cross_hypernet = HyperNet(
-                self.encoding_dim, input_dim, self.embedding_dim, down_dim)
-        
-        if 'hyfn' in self.args.name:
-            self.ffn_en_hypernet_wi = HyperNet(
-                self.encoding_dim, input_dim, self.embedding_dim * 8, down_dim * 4)
-            self.ffn_en_hypernet_wo = HyperNet(
-                self.encoding_dim, input_dim * 4, self.embedding_dim * 8, down_dim)
-            self.ffn_de_hypernet_wi = HyperNet(
-                self.encoding_dim, input_dim, self.embedding_dim * 8, down_dim * 4)
-            self.ffn_de_hypernet_wo = HyperNet(
-                self.encoding_dim, input_dim * 4, self.embedding_dim * 8, down_dim)
-        
-        if weights is not None:
-            self.hypernet.load_state_dict(torch.load(
-                weights, map_location=torch.device('cpu')))
-            print("WEIGHTS LOADED")
+            if 'hyfn' in self.args.name:
+                self.ffn_en_hypernet_wi = HyperNet(
+                    self.encoding_dim, input_dim, self.embedding_dim * 8, down_dim * 4)
+                self.ffn_en_hypernet_wo = HyperNet(
+                    self.encoding_dim, input_dim * 4, self.embedding_dim * 8, down_dim)
+                self.ffn_de_hypernet_wi = HyperNet(
+                    self.encoding_dim, input_dim, self.embedding_dim * 8, down_dim * 4)
+                self.ffn_de_hypernet_wo = HyperNet(
+                    self.encoding_dim, input_dim * 4, self.embedding_dim * 8, down_dim)
+            
+            if weights is not None:
+                self.hypernet.load_state_dict(torch.load(
+                    weights, map_location=torch.device('cpu')))
+                print("WEIGHTS LOADED")
 
         # self.earth_mover_loss = SamplesLoss(loss="sinkhorn", p=2)
 
         self.init_hypernet()
+
+    def get_llama_hypernet(self):
+        input_dim = self.model.config.hidden_size
+        down_dim = self.model.config.intermediate_size
+        self.hypernet = HyperNet(self.encoding_dim, input_dim, self.embedding_dim, input_dim)
+        self.mlp_hypernet = HyperNet(self.encoding_dim, input_dim, self.embedding_dim, down_dim)
+        self.down_hypernet = HyperNet(self.encoding_dim, down_dim, self.embedding_dim, input_dim)
 
     def init_layer(self, layer):
         weight = nn.Parameter(torch.normal(0, 1e-7, layer.weight.shape))
@@ -434,32 +439,41 @@ class AdapterWrapper(nn.Module):
         pass
 
     def freeze_params(self):
-        if 'hyperlora' in self.args.name:
+        if 'llama' in self.model.config.model_type:
             for layer in self.model.modules():
                 for _, param in layer.named_parameters():
                     param.requires_grad = False
-        else:
-            # All modules in the
-            # modules_to_freeze = [self.model.encoder.encoder.block[i].layer[0] for i in range(len(self.model.encoder.encoder.block))]
-            modules_to_freeze = [l.module.layer[0] if hasattr(l, "module") else l.layer[0] for l in self.model.encoder.encoder.block]
-            # modules_to_freeze.extend([l.module.layer[1] if hasattr(l, "module") else l.layer[1] for l in self.model.encoder.encoder.block])
-            # And the decoder modules, which has both a SelfAttention (layer[0])
-            modules_to_freeze.extend([self.model.decoder.block[i].layer[0] for i in range(len(self.model.decoder.block))])
-            # and CrossAttention (layer[1]) block
-            modules_to_freeze.extend([self.model.decoder.block[i].layer[1] for i in range(len(self.model.decoder.block))])
-            # modules_to_freeze.extend([self.model.decoder.block[i].layer[2] for i in range(len(self.model.decoder.block))])
-            for module in modules_to_freeze:
-                for param in module.parameters():
-                    param.requires_grad = False  # Actual freezing operation
-        for layer in self.model.modules():
-            for x, param in layer.named_parameters():
-                if "norm" in x or "emb" in x or "hypernet" in x:
-                    param.requires_grad = True
-        if 'ffn' in self.args.name:
             for layer in self.model.modules():
                 for x, param in layer.named_parameters():
-                    if "wi" in x or "wo" in x:
+                    if "norm" in x or "emb" in x or "hypernet" in x:
                         param.requires_grad = True
+        else:
+            if 'hyperlora' in self.args.name:
+                for layer in self.model.modules():
+                    for _, param in layer.named_parameters():
+                        param.requires_grad = False
+            else:
+                # All modules in the
+                # modules_to_freeze = [self.model.encoder.encoder.block[i].layer[0] for i in range(len(self.model.encoder.encoder.block))]
+                modules_to_freeze = [l.module.layer[0] if hasattr(l, "module") else l.layer[0] for l in self.model.encoder.encoder.block]
+                # modules_to_freeze.extend([l.module.layer[1] if hasattr(l, "module") else l.layer[1] for l in self.model.encoder.encoder.block])
+                # And the decoder modules, which has both a SelfAttention (layer[0])
+                modules_to_freeze.extend([self.model.decoder.block[i].layer[0] for i in range(len(self.model.decoder.block))])
+                # and CrossAttention (layer[1]) block
+                modules_to_freeze.extend([self.model.decoder.block[i].layer[1] for i in range(len(self.model.decoder.block))])
+                # modules_to_freeze.extend([self.model.decoder.block[i].layer[2] for i in range(len(self.model.decoder.block))])
+                for module in modules_to_freeze:
+                    for param in module.parameters():
+                        param.requires_grad = False  # Actual freezing operation
+            for layer in self.model.modules():
+                for x, param in layer.named_parameters():
+                    if "norm" in x or "emb" in x or "hypernet" in x:
+                        param.requires_grad = True
+            if 'ffn' in self.args.name:
+                for layer in self.model.modules():
+                    for x, param in layer.named_parameters():
+                        if "wi" in x or "wo" in x:
+                            param.requires_grad = True
             # self.hypernet.pre_down_linear.weight.requires_grad = True
             # self.hypernet.pre_down_linear.bias.requires_grad = True
             # self.hypernet.pre_up_linear.weight.requires_grad = True
@@ -540,6 +554,11 @@ class AdapterWrapper(nn.Module):
 
         self.hypernet.down_hypernet.set_features(self.emb(features))
         self.hypernet.up_hypernet.set_features(self.emb(features))
+        if 'llama' in self.model.config.model_type:
+            self.mlp_hypernet.down_hypernet.set_features(self.emb(features))
+            self.mlp_hypernet.up_hypernet.set_features(self.emb(features))
+            self.down_hypernet.down_hypernet.set_features(self.emb(features))
+            self.down_hypernet.up_hypernet.set_features(self.emb(features))
         if 'hyperlora' in self.args.name:
             self.decoder_hypernet.down_hypernet.set_features(self.emb(features))
             self.decoder_hypernet.up_hypernet.set_features(self.emb(features))
@@ -563,6 +582,11 @@ class AdapterWrapper(nn.Module):
                   "attention_mask": attention_mask, **kwargs}
         self.hypernet.down_hypernet.set_features(self.emb(features))
         self.hypernet.up_hypernet.set_features(self.emb(features))
+        if 'llama' in self.model.config.model_type:
+            self.mlp_hypernet.down_hypernet.set_features(self.emb(features))
+            self.mlp_hypernet.up_hypernet.set_features(self.emb(features))
+            self.down_hypernet.down_hypernet.set_features(self.emb(features))
+            self.down_hypernet.up_hypernet.set_features(self.emb(features))
         if 'hyperlora' in self.args.name:
             self.decoder_hypernet.down_hypernet.set_features(self.emb(features))
             self.decoder_hypernet.up_hypernet.set_features(self.emb(features))
@@ -579,6 +603,10 @@ class AdapterWrapper(nn.Module):
             self.ffn_de_hypernet_wo.up_hypernet.set_features(self.emb(features))
         return self.model.generate(**inputs)
 
+    def print_trainable_parameters(self):
+        total_num = sum(p.numel() for p in self.model.parameters())
+        trainable_num = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+        print(f'Parameter number Totel:{total_num/2**20:.2f}M, Trainable:{trainable_num/2**20:.2f}M\n')
 
 class T5LoraWrapper(AdapterWrapper):
     def __init__(self, model, embedding_dim, weights, args):
@@ -605,4 +633,21 @@ class T5LoraWrapper(AdapterWrapper):
                 l = l.module if hasattr(l, "module") else l
                 l.layer[2].DenseReluDense.wi = HyperLora(l.layer[2].DenseReluDense.wi, self.ffn_de_hypernet_wi.down_hypernet, self.ffn_de_hypernet_wi.up_hypernet, i)
                 l.layer[2].DenseReluDense.wo = HyperLora(l.layer[2].DenseReluDense.wo, self.ffn_de_hypernet_wo.down_hypernet, self.ffn_de_hypernet_wo.up_hypernet, i)
+        self.freeze_params()
+
+class LlamaLoraWrapper(AdapterWrapper):
+    def __init__(self, model, embedding_dim, weights, args=None):
+        super().__init__(model, embedding_dim, weights, args)
+    
+    def init_hypernet(self):
+        for i, l in enumerate(self.model.model.layers):
+            l = l.module if hasattr(l, "module") else l
+            l.self_attn.q_proj = HyperLora(l.self_attn.q_proj, self.hypernet.down_hypernet, self.hypernet.up_hypernet, 4*i)
+            l.self_attn.k_proj = HyperLora(l.self_attn.k_proj, self.hypernet.down_hypernet, self.hypernet.up_hypernet, 4*i+1)
+            l.self_attn.v_proj = HyperLora(l.self_attn.v_proj, self.hypernet.down_hypernet, self.hypernet.up_hypernet, 4*i+2)
+            l.self_attn.o_proj = HyperLora(l.self_attn.o_proj, self.hypernet.down_hypernet, self.hypernet.up_hypernet, 4*i+3)
+            
+            l.mlp.gate_proj = HyperLora(l.mlp.gate_proj, self.mlp_hypernet.down_hypernet, self.mlp_hypernet.up_hypernet, 2*i)
+            l.mlp.up_proj = HyperLora(l.mlp.up_proj, self.mlp_hypernet.down_hypernet, self.mlp_hypernet.up_hypernet, 2*i+1)
+            l.mlp.down_proj = HyperLora(l.mlp.down_proj, self.down_hypernet.down_hypernet, self.down_hypernet.up_hypernet, i)
         self.freeze_params()
