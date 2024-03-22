@@ -1,8 +1,9 @@
 set -e
 
-if [[ $# -lt 11 ]]; then
-  echo "It requires 11 args to run the script and the current # of bash args: $#"
-  echo "image.sh <num_gpus> <gpus> <accumulate_grad_batches> <val_check_interval> <batch_size> <max_steps> <name> <distill> <train_teacher> <use_gold> <lr>"
+if [[ $# -lt 22 ]]; then
+  echo "It requires 22 args to run the script and the current # of bash args: $#"
+  echo "image.sh <num_gpus> <gpus> <accumulate_grad_batches> <val_check_interval> <batch_size> <max_steps> <name> <distill> <train_teacher> <use_gold> <lr> <num_compress> <size> 
+  <dataset> <train> <select for alignment> <whether use context for hypernetwork> <num_docs for teacher> <rank> "
   exit 1
 fi
 
@@ -33,8 +34,10 @@ select=${16:-"all"}
 use_context=${17:-"no"}
 n_context=${18:-"100"}
 lora_rank=${19:-"32"}
-test_fid=${20:-"No"}
-model_dataset=${21:-"NQ"}
+pre=${20:-"no"}
+test_fid=${21:-"No"}
+model_dataset=${22:-"NQ"}
+
 default_root_dir="output_${dataset}"
 teacher_model="pretrained_models/nq_reader_$size"
 echo "batch_size: ${batch_size}"
@@ -107,21 +110,20 @@ if [ "$dataset" == "WQ" ];then
   teacher_model="pretrained_models/wq_reader_$size"
 fi
 hg_datapath="dataset/Image/$dataset"
+hg_datapath="${hg_datapath}-pred"
+if [ "$pre" = "pred" ];then
+  name="${name}_pred"
+  hg_datapath="${hg_datapath}-pred"
+  extra_args="$extra_args --pred"
+fi
+if [ "$pre" = "gen" ];then
+  name="${name}_gen"
+  hg_datapath="${hg_datapath}-gen"
+  extra_args="$extra_args --pred"
+fi
 extra_args="$extra_args --hg_datapath ${hg_datapath} --n_c ${n_c}"
 
 if [ "$n_c" != "0" ];then
-  # hg_datapath="dataset/Image/$dataset"
-  # if [ "$dataset" == "TQA" ];then
-  #   hg_datapath="dataset/Image/TQA"
-  #   teacher_model="pretrained_models/tqa_reader_$size"
-  #   default_root_dir="output_tqa"
-  # fi
-  # if [ "$dataset" == "WQ" ];then
-  #   hg_datapath="dataset/Image/WQ"
-  #   teacher_model="pretrained_models/wq_reader_$size"
-  #   default_root_dir="output_wq"
-  # fi
-  # extra_args="$extra_args --hg_datapath ${hg_datapath} --n_c ${n_c}"
   name="${name}_hg_ctxs${n_c}"
   echo "data from ${hg_datapath}"
 fi
@@ -129,11 +131,7 @@ name="${name}_${gold}_lr${lr}_${size}_rank${lora_rank}"
 file=main.py
 if [ "$train" = "test" ];then
   file=test.py
-  # load_checkpoints_path="output/fid_cbqa_lr1e-3_hg_ctxs1/ckpt/epoch=19-step=49006-val_em=25.16.ckpt"
-  # load_checkpoints_path="output_tqa/hylora_kl_hg_ctxs5_gen_lr1e-3_base_usecontext_alllayers_100/ckpt/epoch=7-step=36975-val_em=61.21.ckpt"
-  load_checkpoints_path="output_NQ/lora_ffn_hg_ctxs5_gen_lr1e-4_large_rank32_usecontext_alllayers_10/ckpt/epoch=8-step=44532-val_em=42.00.ckpt"
-  # load_checkpoints_path="output_WQ/lora_ffn_hg_ctxs5_gen_lr1e-4_base_rank32_usecontext_alllayers_10/ckpt/epoch=15-step=1744-val_em=52.63.ckpt"
-  # load_checkpoints_path="output_TQA/lora_ffn_hg_ctxs5_gen_lr1e-4_base_rank32_usecontext_alllayers_10/ckpt/epoch=9-step=23398-val_em=64.01.ckpt"
+  load_checkpoints_path="output_NQ/fid_hg_ctxs5_cbqa_lr1e-3_base_alllayers_5/ckpt/epoch=14-step=37110-val_em=24.47.ckpt"
   default_root_dir="output_test_${model_dataset}"
   name="${name}_test_${dataset}"
   extra_args="$extra_args --load_checkpoints_path $load_checkpoints_path"

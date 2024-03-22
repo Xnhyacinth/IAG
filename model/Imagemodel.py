@@ -112,7 +112,7 @@ class ImageLitModel(pl.LightningModule):
                             default=16, help='rank of lora')
         parser.add_argument("--lora_rank", type=int,
                             default=16, help='rank of image network')
-        parser.add_argument("--load_hypernet_weights", type=int, default=None,
+        parser.add_argument("--load_hypernet_weights", type=str, default=None,
                             help='Path to hypernet weights, otherwise random init')
         parser.add_argument(
             '--do_distill', action='store_true', help='distill or not')
@@ -278,6 +278,7 @@ class ImageLitModel(pl.LightningModule):
             self.model.train()
             (idx, labels, _, context_ids, context_mask,
              t_context_ids, t_context_mask, features, _) = batch
+
             with torch.no_grad():
                 teacher_outputs = self.t_model(
                     input_ids=t_context_ids,

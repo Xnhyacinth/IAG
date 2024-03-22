@@ -18,13 +18,15 @@ def load_data(args, datapath):
         f.write(
             f'load data from {datapath}, use compressed_ctxs_{args.n_c}\n')
         f.close()
+
     dataset = load_from_disk(datapath)
+        
     if 'TQA' in datapath:
         dataset = dataset.select_columns(
-            ['id', 'question', 'answers', 'target', f'compressed_ctxs_{args.n_c}', 'ctxs'])
+            ['id', 'question', 'answers', 'target', f'compressed_ctxs_{args.n_c}', 'ctxs', 'pred'])
     else:
         dataset = dataset.select_columns(
-            ['id', 'question', 'answers', f'compressed_ctxs_{args.n_c}', 'ctxs'])
+            ['id', 'question', 'answers', f'compressed_ctxs_{args.n_c}', 'ctxs', 'pred'])
     dataset = dataset.rename_column(
         f'compressed_ctxs_{args.n_c}', 'context')
     return dataset

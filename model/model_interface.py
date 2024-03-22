@@ -26,30 +26,8 @@ class MInterface(pl.LightningModule):
         # total_parser.add_argument("--checkpoint_dir", type=str, default="./checkpoint/", help="models are saved here")
         total_parser.add_argument(
             "--name", type=str, default="experiment_name", help="name of the experiment")
-        # total_parser.add_argument(
-        #     "--bf16",
-        #     type=bool,
-        #     default=True if torch.cuda.get_device_capability()[0] == 8 else False,
-        #     help="Whether to use bf16.",
-        # )
-        # total_parser.add_argument("--fp16", action="store_true", help="T5 overflows with fp16")
-        # add training hyperparameters for epochs, batch size, learning rate, and seed
-        # total_parser.add_argument("--max_epochs", type=int, default=5, help="Number of epochs to train for.")
-        # total_parser.add_argument("--per_device_train_batch_size", type=int, default=4, help="Batch size to use for training.")
-        # total_parser.add_argument("--per_device_eval_batch_size", type=int, default=4, help="Batch size to use for testing.")
-        # total_parser.add_argument("--generation_max_length", type=int, default=32, help="Maximum length to use for generation")
-        # total_parser.add_argument("--generation_num_beams", type=int, default=2, help="Number of beams to use for generation.")
-        # total_parser.add_argument("--gradient_accumulation_steps", type=int, default=4, help="Number of accumulation_steps to use for generation.")
         total_parser.add_argument(
             "--seed", type=int, default=0, help="random seed for initialization")
-        # deepspeed
-        # total_parser.add_argument("--deepspeed", type=str, default=None, help="Path to deepspeed config file.")
-        # logging & evaluation strategies
-        # total_parser.add_argument("--logging_dir", type=str, default=None, help="Path to deepspeed config file.")
-        # total_parser.add_argument("--logging_strategy", type=str, default="steps", help="strategy of logging")
-        # total_parser.add_argument("--logging_steps", type=int, default=500, help="Steps of logging.")
-
-        # total_parser.add_argument("--load_best_model_at_end", action="store_true", default=True)
         total_parser.add_argument("--use_checkpoint", action="store_true")
         total_parser.add_argument("--use_context", action="store_true")
         total_parser.add_argument("--test_fid", action="store_true")
@@ -57,8 +35,6 @@ class MInterface(pl.LightningModule):
             "--local_rank", type=int, default=-1, help="For distributed training: local_rank")
         total_parser.add_argument(
             "--main_port", type=int, default=-1, help="Main port (for multi-node SLURM jobs)")
-        # total_parser.add_argument("--write_results", action="store_true", help="save results")
-        # total_parser.add_argument("--write_crossattention_scores", action="store_true", help="save dataset with cross-attention scores")
 
         total_parser = ImageDataModel.add_data_specific_args(total_parser)
         total_parser = UniversalCheckpoint.add_argparse_args(total_parser)
@@ -180,45 +156,12 @@ class MInterface(pl.LightningModule):
     def train(self):
         if self.args.n_c != 0:
             dataset = load_data(self.args, self.args.hg_datapath)
-            # with open(self.args.output_dir / 'logging.txt', 'a+') as f:
-            #     f.write(
-            #         f'load data from {self.args.hg_datapath}, use compressed_ctxs_{self.args.n_c}\n')
-            #     f.close()
-            # # dataset = load_dataset(self.args.hg_datapath)
-            # dataset = load_from_disk(self.args.hg_datapath)
-            # if 'TQA' in self.args.hg_datapath:
-            #     # dataset = load_from_disk('dataset/Image/TQA')
-            #     dataset = dataset.select_columns(
-            #         ['id', 'question', 'answers', 'target', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
-            # else:
-            #     # dataset = load_from_disk('dataset/Image/NQ')
-            #     dataset = dataset.select_columns(
-            #         ['id', 'question', 'answers', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
-            # # dataset['train'] = dataset['train'].select(range(1456))
-            # # dataset['eval'] = dataset['eval'].select(range(223))
-            # # dataset['test'] = dataset['test'].select(range(878))
-            # dataset = dataset.rename_column(
-            #     f'compressed_ctxs_{self.args.n_c}', 'context')
-            # dataset['context'] = dataset['context']['compressed_prompt']
-            # dataset = dataset.map(self.get_features, batched=True, batch_size=2048, desc="Features for Input")
-            # dataset = self.load_features(dataset, self.args.hg_datapath)
-            # print(dataset)
-            # self.data_model = ImageDataModel(
-            #     self.tokenizer, self.args, dataset=dataset)
-            # self.model.num_data = len(dataset['train'])
         else:
             train_data = Dataset.from_dict(self.load_data(self.args.train_data))
             dev_data = Dataset.from_dict(self.load_data(self.args.eval_data))
             test_data = Dataset.from_dict(self.load_data(self.args.test_data))
             # dataset = load_dataset("json", data_files={'train':self.args.train_data, 'eval':self.args.eval_data, 'test':self.args.test_data})
             dataset = DatasetDict({'train': train_data, 'eval': dev_data, 'test': test_data})
-            # self.data_model = ImageDataModel(
-            #     self.tokenizer, self.args, train_data, dev_data, test_data)
-            # dataset = load_dataset("json", data_files={'train':self.args.train_data, 'eval':self.args.eval_data, 'test':self.args.test_data})
-            # dataset = dataset.map(self.get_features, batched=True, desc="Features for Input")
-            # self.data_model = ImageDataModel(
-            #     dataset['train'], dataset['eval'], dataset['test'], self.tokenizer, self.args)
-            # self.model.num_data = len(train_data)
         dataset = self.load_features(dataset, self.args.hg_datapath)
         print(dataset)
         self.data_model = ImageDataModel(
@@ -230,20 +173,6 @@ class MInterface(pl.LightningModule):
 
     def test(self, model=None, data=None):
         if data is not None:
-            # with open(self.args.output_dir / 'logging.txt', 'a+') as f:
-            #     f.write(
-            #         f'load data from {data}, use compressed_ctxs_{self.args.n_c}\n')
-            #     f.close()
-            # # dataset = load_dataset(self.args.hg_datapath)
-            # dataset = load_from_disk(f'{data}/test')
-            # if 'TQA' in data:
-            #     dataset = dataset.select_columns(
-            #         ['id', 'question', 'answers', 'target', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
-            # else:
-            #     dataset = dataset.select_columns(
-            #         ['id', 'question', 'answers', f'compressed_ctxs_{self.args.n_c}', 'ctxs'])
-            # dataset = dataset.rename_column(
-            #     f'compressed_ctxs_{self.args.n_c}', 'context')
             dataset = load_data(self.args, f'{data}/test')
             dataset = self.load_features(dataset, data)
             print(dataset)

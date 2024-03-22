@@ -34,7 +34,7 @@ def load_data_compress(data_path=None, global_rank=-1, world_size=-1):
 class Simcsewrap(nn.Module):
     def __init__(self, model_path_simcse_roberta, length): #code_length为fc映射到的维度大小
         super(Simcsewrap, self).__init__()
-        self.model = AutoModel.from_pretrained(model_path_simcse_roberta, cache_dir="/data2/huanxuan/.cache/huggingface/hub/", resume_download=True)
+        self.model = AutoModel.from_pretrained(model_path_simcse_roberta, cache_dir="", resume_download=True)
         embedding_dim = self.model.config.hidden_size
 
         self.fc = nn.Linear(embedding_dim, length)
@@ -61,14 +61,12 @@ def compute_kernel_bias(vecs, n_components=256):
     W = np.dot(u, np.diag(1 / np.sqrt(s)))
     return W[:, :n_components], -mu
 
-
 def transform_and_normalize(vecs, kernel=None, bias=None):
     """ normalization
     """
     if not (kernel is None or bias is None):
         vecs = (vecs + bias).dot(kernel)
     return vecs / (vecs**2).sum(axis=1, keepdims=True)**0.5
-
 
 def get_features(sample, tokenizer, encoder):
     question = ['Question: Please write a high-quality answer for the given question using only the provided search results (some of which might be irrelevant). Only give me the answer and do not output any other words.'\
@@ -139,10 +137,3 @@ for split in ["train", "eval", "test"]:
     print(len(new_data))
     with open(f"{checkpoint_path}/{split}.json", "w") as f:
         json.dump(new_data, f, indent=4)
-# da = "dev"
-# data0 = load_data(f"/home/huanxuan/FiD/open_domain_data/NQ/{da}.json")
-# data = load_data_compress(f"/home/huanxuan/FiD/pl/data/NQ/{da}/{da}.json")
-# for d, d0 in tqdm(zip(data, data0), desc='Length'):
-#     d["ctxs"] = d0["ctxs"]
-# with open(f"/home/huanxuan/FiD/pl/data/NQ/{da}.json", "w") as f:
-#     json.dump(data, f, indent=4)

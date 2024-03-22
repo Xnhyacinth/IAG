@@ -54,7 +54,8 @@ class ImageDataset(Dataset):
             'question': question,
             'target': target,
             'passages': passages,
-            'context': example['context']['compressed_prompt'][204:] if 'NQ' in self.args.default_root_dir and self.args.n_c == 5 else example['context']['compressed_prompt'][194:],
+            'context': example['pred'] if self.args.pred else example['context']['compressed_prompt'][204:] if 'NQ' in self.args.default_root_dir and self.args.n_c == 5 else example['context']['compressed_prompt'][194:],
+            # 'context': example['context']['compressed_prompt'][204:] if 'NQ' in self.args.default_root_dir and self.args.n_c == 5 else example['context']['compressed_prompt'][194:],
             'features': example['features'],
             'answers': example['answers']
         }
@@ -75,6 +76,7 @@ class ImageDataModel(pl.LightningDataModule):
         parser.add_argument('--num_workers', default=10, type=int)
         parser.add_argument('--batch_size', default=1, type=int)
         parser.add_argument("--gold", action="store_true", help="Whether use gold passage")
+        parser.add_argument("--pred", action="store_true", help="Whether use pred")
         parser.add_argument("--cbqa", action="store_true", help="Whether use none passage")
         parser.add_argument("--train_data", type=str, default=None, help="path of train data")
         parser.add_argument("--eval_data", type=str, default=None, help="path of eval data")
