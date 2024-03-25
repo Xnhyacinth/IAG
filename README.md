@@ -1,9 +1,14 @@
-# 📄 IAG & ImcQA
+# 📄 Imagination Augmented Generation: Learning to Imagine Richer Context for Question Answering over Large Language Models 💡
 
+<p align="center">
+    <img alt="GitHub" src="https://img.shields.io/github/license/Xnhyacinth/IAG.svg?color=blue&style=flat-square">
+    <img alt="GitHub top language" src="https://img.shields.io/github/languages/top/Xnhyacinth/IAG">
+    <img alt="GitHub last commit" src="https://img.shields.io/github/last-commit/Xnhyacinth/IAG">
+</p>
 
-      
-The official repository of the paper [Imagination Augmented Generation: Learning to Imagine Richer Context for Question Answering over Large Language Models]().
-
+<p align="center">
+🔔 <a href="https://github.com/Xnhyacinth/IAG" target="_blank">Code</a> • 📃 <a href="https://arxiv.org/abs/2403.15268" target="_blank">Paper</a> • 🤗 <a href="https://huggingface.co/datasets/Xnhyacinth/Image" target="_blank">Dataset</a>  <br> 
+</p>
 
 ## 🎓 IAG Overview
 
@@ -18,8 +23,7 @@ bash scripts/run.sh
 ```
 
 ## 📝 Quick Links
-
-- [📄 IAG \& ImcQA](#-iag--imcqa)
+- [📄 Imagination Augmented Generation: Learning to Imagine Richer Context for Question Answering over Large Language Models 💡](#-imagination-augmented-generation-learning-to-imagine-richer-context-for-question-answering-over-large-language-models-)
   - [🎓 IAG Overview](#-iag-overview)
   - [🚀 Quick Start](#-quick-start)
   - [📝 Quick Links](#-quick-links)
@@ -163,5 +167,12 @@ bash ft_llama/test/eval.sh
 
 If you find our work useful in your research and would like to cite our project, please use the following citation: found this work useful, please consider giving this repository a star and citing our paper as follows:
 ```
-None
+@misc{liao2024imagination,
+      title={Imagination Augmented Generation: Learning to Imagine Richer Context for Question Answering over Large Language Models}, 
+      author={Huanxuan Liao and Shizhu He and Yao Xu and Yuanzhe Zhang and Kang Liu and Shengping Liu and Jun Zhao},
+      year={2024},
+      eprint={2403.15268},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
+}
 ```
