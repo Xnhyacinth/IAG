@@ -166,7 +166,7 @@ bash ft_llama/test/eval.sh
 ## 🤝 Referencing and Citing 
 
 If you find our work useful in your research and would like to cite our project, please use the following citation: found this work useful, please consider giving this repository a star and citing our paper as follows:
-```
+```bibtex
 @misc{liao2024imagination,
       title={Imagination Augmented Generation: Learning to Imagine Richer Context for Question Answering over Large Language Models}, 
       author={Huanxuan Liao and Shizhu He and Yao Xu and Yuanzhe Zhang and Kang Liu and Shengping Liu and Jun Zhao},
