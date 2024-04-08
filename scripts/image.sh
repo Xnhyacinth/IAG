@@ -206,4 +206,3 @@ deepspeed --include localhost:$gpus --master_port $MASTER_PORT ${file} \
         # --gradient_accumulation_steps 8 \
         # --gpus ${num_gpus} \
 #t 5e-5 lr 1e-4
-# my_distillation_c1_ds_1_all_rep_alllayers #/data2/huanxuan/FiD/nq
