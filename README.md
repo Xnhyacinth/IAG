@@ -167,12 +167,10 @@ bash ft_llama/test/eval.sh
 
 If you find our work useful in your research and would like to cite our project, please use the following citation: found this work useful, please consider giving this repository a star and citing our paper as follows:
 ```bibtex
-@misc{liao2024imagination,
-      title={Imagination Augmented Generation: Learning to Imagine Richer Context for Question Answering over Large Language Models}, 
-      author={Huanxuan Liao and Shizhu He and Yao Xu and Yuanzhe Zhang and Kang Liu and Shengping Liu and Jun Zhao},
-      year={2024},
-      eprint={2403.15268},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL}
+@article{liao2024imagination,
+  title={Imagination Augmented Generation: Learning to Imagine Richer Context for Question Answering over Large Language Models},
+  author={Liao, Huanxuan and He, Shizhu and Xu, Yao and Zhang, Yuanzhe and Liu, Kang and Liu, Shengping and Zhao, Jun},
+  journal={arXiv preprint arXiv:2403.15268},
+  year={2024}
 }
 ```
