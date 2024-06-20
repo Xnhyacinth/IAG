@@ -14,7 +14,7 @@
 
 Imagination Augmented Generation (IAG) is a novel framework designed to enhance the knowledge utilization of Large Language Models (LLMs) for question answering tasks. IAG simulates the human capacity to compensate for knowledge deficits through imagination, without relying on external resources. This method is particularly useful for knowledge-intensive tasks where LLMs often lack the sufficient capability to handle independently. The architecture of the proposed ImcQA whithin IAG is shown in the following figure.
 
-<img src="assets/model.jpg"  width="90%">
+<img src="assets/model.jpg"  width="100%">
 
 ## 🚀 Quick Start
 
@@ -168,9 +168,9 @@ bash ft_llama/test/eval.sh
 If you find our work useful in your research and would like to cite our project, please use the following citation: found this work useful, please consider giving this repository a star and citing our paper as follows:
 ```bibtex
 @article{liao2024imagination,
-  title={Imagination Augmented Generation: Learning to Imagine Richer Context for Question Answering over Large Language Models},
-  author={Liao, Huanxuan and He, Shizhu and Xu, Yao and Zhang, Yuanzhe and Liu, Kang and Liu, Shengping and Zhao, Jun},
-  journal={arXiv preprint arXiv:2403.15268},
-  year={2024}
+	title={Imagination Augmented Generation: Learning to Imagine Richer Context for Question Answering over Large Language Models},
+	author={Liao, Huanxuan and He, Shizhu and Xu, Yao and Zhang, Yuanzhe and Liu, Kang and Liu, Shengping and Zhao, Jun},
+	journal={arXiv preprint arXiv:2403.15268},
+	year={2024}
 }
 ```
