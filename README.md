@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-🔔 <a href="https://github.com/Xnhyacinth/IAG" target="_blank">Code</a> • 📃 <a href="https://arxiv.org/abs/2403.15268" target="_blank">Paper</a> • 🤗 <a href="https://huggingface.co/datasets/Xnhyacinth/Image" target="_blank">Dataset</a>  <br> 
+🔔 <a href="https://github.com/Xnhyacinth/IAG" target="_self">Code</a> • 📃 <a href="https://arxiv.org/abs/2403.15268" target="_self">Paper</a> • 🤗 <a href="https://huggingface.co/datasets/Xnhyacinth/Image" target="_self">Dataset</a> • 🏠 <a href="https://xnhyacinth.github.io/IAG" target="_self">Homepage</a> <br> 
 </p>
 
 ## 🎓 IAG Overview
