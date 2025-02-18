@@ -1,4 +1,4 @@
-# 📄 Imagination Augmented Generation: Learning to Imagine Richer Context for Question Answering over Large Language Models 💡
+# 📄 Awakening Augmented Generation: Learning to Awaken Internal Knowledge of Large Language Models for Question Answering 💡
 
 <p align="center">
     <img alt="GitHub" src="https://img.shields.io/github/license/Xnhyacinth/IAG.svg?color=blue&style=flat-square">
@@ -10,9 +10,9 @@
 🔔 <a href="https://github.com/Xnhyacinth/IAG" target="_self">Code</a> • 📃 <a href="https://arxiv.org/abs/2403.15268" target="_self">Paper</a> • 🤗 <a href="https://huggingface.co/datasets/Xnhyacinth/Image" target="_self">Dataset</a> • 🏠 <a href="https://xnhyacinth.github.io/IAG" target="_self">Homepage</a> <br> 
 </p>
 
-## 🎓 IAG Overview
+## 🎓 AAG Overview
 
-Imagination Augmented Generation (IAG) is a novel framework designed to enhance the knowledge utilization of Large Language Models (LLMs) for question answering tasks. IAG simulates the human capacity to compensate for knowledge deficits through imagination, without relying on external resources. This method is particularly useful for knowledge-intensive tasks where LLMs often lack the sufficient capability to handle independently. The architecture of the proposed ImcQA whithin IAG is shown in the following figure.
+Awakening Augmented Generation(AAG) is a novel framework designed to enhance the knowledge utilization of Large Language Models (LLMs) for question answering tasks. IAG simulates the human capacity to compensate for knowledge deficits through imagination, without relying on external resources. This method is particularly useful for knowledge-intensive tasks where LLMs often lack the sufficient capability to handle independently. The architecture of the proposed ImcQA whithin AAG is shown in the following figure.
 
 <img src="assets/model.jpg"  width="100%">
 
@@ -23,7 +23,7 @@ bash scripts/run.sh
 ```
 
 ## 📝 Quick Links
-- [📄 Imagination Augmented Generation: Learning to Imagine Richer Context for Question Answering over Large Language Models 💡](#-imagination-augmented-generation-learning-to-imagine-richer-context-for-question-answering-over-large-language-models-)
+- [📄 Awakening Augmented Generation: Learning to Awaken Internal Knowledge of Large Language Models for Question Answering 💡](#-imagination-augmented-generation-learning-to-imagine-richer-context-for-question-answering-over-large-language-models-)
   - [🎓 IAG Overview](#-iag-overview)
   - [🚀 Quick Start](#-quick-start)
   - [📝 Quick Links](#-quick-links)
@@ -167,10 +167,28 @@ bash ft_llama/test/eval.sh
 
 If you find our work useful in your research and would like to cite our project, please use the following citation: found this work useful, please consider giving this repository a star and citing our paper as follows:
 ```bibtex
-@article{liao2024imagination,
-	title={Imagination Augmented Generation: Learning to Imagine Richer Context for Question Answering over Large Language Models},
-	author={Liao, Huanxuan and He, Shizhu and Xu, Yao and Zhang, Yuanzhe and Liu, Kang and Liu, Shengping and Zhao, Jun},
-	journal={arXiv preprint arXiv:2403.15268},
-	year={2024}
+@inproceedings{liao-etal-2025-awakening,
+    title = "Awakening Augmented Generation: Learning to Awaken Internal Knowledge of Large Language Models for Question Answering",
+    author = "Liao, Huanxuan  and
+      He, Shizhu  and
+      Xu, Yao  and
+      Zhang, Yuanzhe  and
+      Liu, Shengping  and
+      Liu, Kang  and
+      Zhao, Jun",
+    editor = "Rambow, Owen  and
+      Wanner, Leo  and
+      Apidianaki, Marianna  and
+      Al-Khalifa, Hend  and
+      Eugenio, Barbara Di  and
+      Schockaert, Steven",
+    booktitle = "Proceedings of the 31st International Conference on Computational Linguistics",
+    month = jan,
+    year = "2025",
+    address = "Abu Dhabi, UAE",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2025.coling-main.89/",
+    pages = "1333--1352",
+    abstract = "Retrieval-Augmented-Generation and Generation-Augmented-Generation have been proposed to enhance the knowledge required for question answering with Large Language Models (LLMs) by leveraging richer context. However, the former relies on external resources, and both require incorporating explicit documents into the context, which increases execution costs and susceptibility to noise data during inference. Recent works indicate that LLMs model rich knowledge, but it is often not effectively activated and awakened. Inspired by this, we propose a novel knowledge-augmented framework, Awakening-Augmented-Generation (AAG), which mimics the human ability to answer questions using only thinking and recalling to compensate for knowledge gaps, thereby awaking relevant knowledge in LLMs without relying on external resources. AAG consists of two key components for awakening richer context. Explicit awakening fine-tunes a context generator to create a synthetic, compressed document that functions as symbolic context. Implicit awakening utilizes a hypernetwork to generate adapters based on the question and synthetic document, which are inserted into LLMs to serve as parameter context. Experimental results on three datasets demonstrate that AAG exhibits significant advantages in both open-domain and closed-book settings, as well as in out-of-distribution generalization. Our code will be available at https://github.com/Xnhyacinth/IAG."
 }
 ```
