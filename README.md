@@ -167,28 +167,11 @@ bash ft_llama/test/eval.sh
 
 If you find our work useful in your research and would like to cite our project, please use the following citation: found this work useful, please consider giving this repository a star and citing our paper as follows:
 ```bibtex
-@inproceedings{liao-etal-2025-awakening,
-    title = "Awakening Augmented Generation: Learning to Awaken Internal Knowledge of Large Language Models for Question Answering",
-    author = "Liao, Huanxuan  and
-      He, Shizhu  and
-      Xu, Yao  and
-      Zhang, Yuanzhe  and
-      Liu, Shengping  and
-      Liu, Kang  and
-      Zhao, Jun",
-    editor = "Rambow, Owen  and
-      Wanner, Leo  and
-      Apidianaki, Marianna  and
-      Al-Khalifa, Hend  and
-      Eugenio, Barbara Di  and
-      Schockaert, Steven",
-    booktitle = "Proceedings of the 31st International Conference on Computational Linguistics",
-    month = jan,
-    year = "2025",
-    address = "Abu Dhabi, UAE",
-    publisher = "Association for Computational Linguistics",
-    url = "https://aclanthology.org/2025.coling-main.89/",
-    pages = "1333--1352",
-    abstract = "Retrieval-Augmented-Generation and Generation-Augmented-Generation have been proposed to enhance the knowledge required for question answering with Large Language Models (LLMs) by leveraging richer context. However, the former relies on external resources, and both require incorporating explicit documents into the context, which increases execution costs and susceptibility to noise data during inference. Recent works indicate that LLMs model rich knowledge, but it is often not effectively activated and awakened. Inspired by this, we propose a novel knowledge-augmented framework, Awakening-Augmented-Generation (AAG), which mimics the human ability to answer questions using only thinking and recalling to compensate for knowledge gaps, thereby awaking relevant knowledge in LLMs without relying on external resources. AAG consists of two key components for awakening richer context. Explicit awakening fine-tunes a context generator to create a synthetic, compressed document that functions as symbolic context. Implicit awakening utilizes a hypernetwork to generate adapters based on the question and synthetic document, which are inserted into LLMs to serve as parameter context. Experimental results on three datasets demonstrate that AAG exhibits significant advantages in both open-domain and closed-book settings, as well as in out-of-distribution generalization. Our code will be available at https://github.com/Xnhyacinth/IAG."
+@inproceedings{liao2025awakening,
+  title={Awakening Augmented Generation: Learning to Awaken Internal Knowledge of Large Language Models for Question Answering},
+  author={Liao, Huanxuan and He, Shizhu and Xu, Yao and Zhang, Yuanzhe and Liu, Shengping and Liu, Kang and Zhao, Jun},
+  booktitle={Proceedings of the 31st International Conference on Computational Linguistics},
+  pages={1333--1352},
+  year={2025}
 }
 ```
